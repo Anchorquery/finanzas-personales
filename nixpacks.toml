@@ -1,5 +1,2 @@
-# Deshabilitar auto-detección de Nixpacks y usar el Dockerfile existente
-[phases.disable]
-install = true
-build = true
-start = true
+# Forzar uso del Dockerfile existente deshabilitando providers
+providers = []

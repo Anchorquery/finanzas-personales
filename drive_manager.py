@@ -189,4 +189,45 @@ def create_spreadsheet(name: str, folder_id: str) -> str:
         print(f"Error creando Spreadsheet: {e}")
         return None
 
-
+def list_receipts(year=None, month=None):
+    """
+    Lista todos los recibos (imágenes) del mes especificado.
+    Retorna lista de dicts con 'name', 'id', 'webViewLink'.
+    """
+    try:
+        service = get_drive_service()
+        
+        if not year: year = datetime.now().year
+        if not month: month = datetime.now().month
+        
+        # Obtener la carpeta del mes
+        date_obj = datetime(year, month, 1)
+        
+        # Buscar carpeta del año
+        year_folder_id = find_folder(service, str(year), GOOGLE_DRIVE_FOLDER_ID)
+        if not year_folder_id:
+            return []
+        
+        # Buscar carpeta del mes
+        meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+                 "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+        month_str = f"{month:02d}_{meses[month - 1]}"
+        month_folder_id = find_folder(service, month_str, year_folder_id)
+        
+        if not month_folder_id:
+            return []
+        
+        # Buscar imágenes en la carpeta
+        query = f"'{month_folder_id}' in parents and mimeType contains 'image/' and trashed=false"
+        results = service.files().list(
+            q=query,
+            fields="files(id, name, webViewLink, createdTime)",
+            orderBy="createdTime desc",
+            pageSize=50
+        ).execute()
+        
+        return results.get('files', [])
+        
+    except Exception as e:
+        print(f"Error listando recibos: {e}")
+        return []

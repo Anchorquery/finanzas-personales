@@ -240,3 +240,82 @@ def get_financial_advice(summary_data: dict) -> str:
         return response.text.strip()
     except Exception as e:
         return "💡 Sigue registrando tus gastos para recibir consejos personalizados pronto."
+
+def answer_financial_question(question: str, summary_data: dict, savings_data: list = None) -> str:
+    """
+    Asistente conversacional IA: responde preguntas naturales sobre finanzas.
+    Ej: "¿Cuánto gasté en comida este mes?"
+    """
+    try:
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        
+        context = f"""
+Datos financieros del usuario este mes:
+- Total gastado: ${summary_data.get('total_usd', 0):.2f}
+- Total ingresos: ${summary_data.get('total_ingresos', 0):.2f}
+- Balance: ${summary_data.get('total_ingresos', 0) - summary_data.get('total_usd', 0):.2f}
+- Gastos por categoría: {summary_data.get('by_category', {})}
+- Número de transacciones: {summary_data.get('count', 0)}
+"""
+        if savings_data:
+            context += f"\nMetas de ahorro: {savings_data}"
+        
+        prompt = f"""Eres un asistente financiero amigable. Responde la pregunta del usuario basándote en sus datos.
+Sé CONCISO y DIRECTO. Usa emojis. Responde en español.
+Si la pregunta no tiene que ver con finanzas, di que solo puedes ayudar con temas financieros.
+
+{context}
+
+PREGUNTA DEL USUARIO: "{question}"
+
+Responde en 2-3 oraciones máximo.
+"""
+        
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        return f"❌ Error al procesar tu pregunta: {str(e)}"
+
+def analyze_spending_trends(data: list) -> dict:
+    """
+    Analiza tendencias en los gastos y detecta patrones.
+    """
+    try:
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        
+        prompt = f"""Analiza estos gastos y detecta tendencias importantes.
+Responde en JSON:
+{{
+    "tendencia_general": "subiendo | bajando | estable",
+    "categoria_creciente": "categoria que más creció",
+    "categoria_decreciente": "categoria que menos se gasta",
+    "patron_detectado": "descripción breve del patrón más notable",
+    "recomendacion": "una recomendación corta"
+}}
+
+DATOS: {data[:30]}
+"""
+        
+        response = model.generate_content(prompt)
+        return process_gemini_response(response)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+def generate_savings_projection(current_saved: float, goal: float, monthly_rate: float) -> dict:
+    """
+    Calcula proyección de ahorro.
+    """
+    if monthly_rate <= 0:
+        return {"months_remaining": None, "message": "Necesitas comenzar a ahorrar para proyectar."}
+    
+    remaining = goal - current_saved
+    if remaining <= 0:
+        return {"months_remaining": 0, "message": "¡Ya alcanzaste tu meta! 🎉"}
+    
+    months = remaining / monthly_rate
+    
+    return {
+        "months_remaining": round(months, 1),
+        "message": f"A este ritmo (${monthly_rate:.2f}/mes), alcanzarás tu meta en {months:.1f} meses.",
+        "projected_date": None  # Se puede calcular con datetime
+    }

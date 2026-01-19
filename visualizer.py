@@ -168,3 +168,149 @@ def generate_monthly_comparison(current_month: dict, previous_month: dict):
     buf.seek(0)
     plt.close()
     return buf
+
+def generate_heatmap_calendar(transactions: list):
+    """Heatmap estilo GitHub para visualizar actividad de gastos por día."""
+    if not transactions: return None
+    
+    try:
+        import numpy as np
+        
+        df = pd.DataFrame(transactions)
+        df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce')
+        df['Monto USD'] = pd.to_numeric(df['Monto USD'].astype(str).str.replace(',', '.'), errors='coerce')
+        df = df.dropna(subset=['Fecha', 'Monto USD'])
+        
+        if df.empty: return None
+        
+        # Agrupar por día
+        daily = df.groupby(df['Fecha'].dt.date)['Monto USD'].sum()
+        
+        # Crear matriz para el mes actual
+        now = datetime.now()
+        days_in_month = pd.date_range(start=f'{now.year}-{now.month:02d}-01', 
+                                       periods=31, freq='D')
+        days_in_month = days_in_month[days_in_month.month == now.month]
+        
+        # Crear datos para heatmap
+        data = []
+        for d in days_in_month:
+            data.append(daily.get(d.date(), 0))
+        
+        # Crear visualización
+        fig, ax = plt.subplots(figsize=(12, 3))
+        
+        # Reshape para 5 filas (semanas) x 7 columnas (días)
+        weeks = (len(data) + 6) // 7
+        padded = data + [0] * (weeks * 7 - len(data))
+        matrix = np.array(padded).reshape(-1, 7)
+        
+        cmap = plt.cm.YlOrRd
+        im = ax.imshow(matrix.T, cmap=cmap, aspect='auto')
+        
+        ax.set_yticks(range(7))
+        ax.set_yticklabels(['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'])
+        ax.set_xlabel('Semana')
+        ax.set_title(f'🗓️ Mapa de Calor de Gastos - {now.strftime("%B %Y")}')
+        
+        # Colorbar
+        cbar = plt.colorbar(im, ax=ax)
+        cbar.set_label('USD')
+        
+        plt.tight_layout()
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        plt.close()
+        return buf
+    except Exception as e:
+        return None
+
+def generate_yearly_comparison(data_by_month: dict):
+    """
+    Compara gastos mensuales del año.
+    data_by_month: {'2026-01': 500, '2026-02': 450, ...}
+    """
+    if not data_by_month: return None
+    
+    months = list(data_by_month.keys())
+    values = list(data_by_month.values())
+    
+    months_labels = [m.split('-')[1] for m in months]  # Solo el mes
+    month_names = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                   'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    
+    labels = [month_names[int(m)-1] if m.isdigit() else m for m in months_labels]
+    
+    fig, ax = plt.subplots(figsize=(12, 5))
+    
+    colors = ['#3498db' if v <= sum(values)/len(values) else '#e74c3c' for v in values]
+    bars = ax.bar(labels, values, color=colors)
+    
+    # Línea de promedio
+    avg = sum(values) / len(values)
+    ax.axhline(y=avg, color='orange', linestyle='--', label=f'Promedio: ${avg:,.0f}')
+    
+    ax.set_xlabel('Mes')
+    ax.set_ylabel('USD')
+    ax.set_title('📅 Gastos por Mes - Comparativa Anual')
+    ax.legend()
+    
+    # Añadir valores
+    for bar, val in zip(bars, values):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 5,
+                f'${val:,.0f}', ha='center', va='bottom', fontsize=9)
+    
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    plt.close()
+    return buf
+
+def generate_savings_progress(savings: list):
+    """Barra de progreso visual para metas de ahorro."""
+    if not savings: return None
+    
+    fig, ax = plt.subplots(figsize=(10, max(3, len(savings) * 1.2)))
+    
+    names = []
+    progress = []
+    colors = []
+    
+    for s in savings:
+        try:
+            current = float(s.get('Ahorrado Actual', 0))
+            goal = float(s.get('Objetivo USD', 1))
+            pct = min(100, (current / goal) * 100)
+            
+            names.append(s['Meta'][:15])
+            progress.append(pct)
+            
+            if pct >= 100: colors.append('#2ecc71')
+            elif pct >= 50: colors.append('#f39c12')
+            else: colors.append('#3498db')
+        except:
+            continue
+    
+    if not names: return None
+    
+    y_pos = range(len(names))
+    bars = ax.barh(y_pos, progress, color=colors)
+    
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(names)
+    ax.set_xlabel('Progreso (%)')
+    ax.set_xlim(0, 110)
+    ax.set_title('💰 Progreso de Metas de Ahorro')
+    
+    for bar, pct in zip(bars, progress):
+        ax.text(bar.get_width() + 2, bar.get_y() + bar.get_height()/2,
+                f'{pct:.0f}%', va='center', fontweight='bold')
+    
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    plt.close()
+    return buf

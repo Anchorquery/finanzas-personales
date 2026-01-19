@@ -32,78 +32,154 @@
         
         .header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
         
         .header h1 {
-            font-size: 24px;
-            margin-bottom: 8px;
+            font-size: 22px;
+            margin-bottom: 4px;
         }
         
-        .header .subtitle {
-            color: var(--tg-theme-hint-color);
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: #f0f0f0;
             font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         
+        .tab.active {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
         
         .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            padding: 16px;
+            border-radius: 14px;
+            padding: 14px;
             color: white;
         }
         
-        .stat-card.income {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-        
-        .stat-card.balance {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        .stat-card.savings {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
+        .stat-card.income { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .stat-card.balance { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-card.savings { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
         
         .stat-card .label {
-            font-size: 12px;
+            font-size: 11px;
             opacity: 0.9;
             margin-bottom: 4px;
         }
         
         .stat-card .value {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
         }
         
-        .chart-container {
-            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
-            border-radius: 16px;
-            padding: 16px;
+        /* Form */
+        .form-group {
             margin-bottom: 16px;
         }
         
-        .chart-title {
-            font-size: 16px;
+        .form-group label {
+            display: block;
+            font-size: 12px;
             font-weight: 600;
-            margin-bottom: 12px;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
+            margin-bottom: 6px;
             color: var(--tg-theme-hint-color);
         }
         
-        .btn-refresh {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color);
+        }
+        
+        .quick-amounts {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        
+        .quick-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .quick-btn:active {
+            background: var(--tg-theme-button-color);
+            color: white;
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .category-btn {
+            padding: 12px 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            font-size: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .category-btn.selected {
+            border-color: var(--tg-theme-button-color);
+            background: rgba(36, 129, 204, 0.1);
+        }
+        
+        .category-btn .icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
             background: var(--tg-theme-button-color);
             color: var(--tg-theme-button-text-color);
             border: none;
@@ -111,74 +187,224 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 16px;
+            margin-top: 20px;
         }
         
-        .btn-refresh:active {
-            opacity: 0.8;
+        .btn-primary:disabled {
+            opacity: 0.5;
+        }
+        
+        .chart-container {
+            background: #f8f9fa;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .success-msg {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .success-msg .icon {
+            font-size: 60px;
+            margin-bottom: 16px;
+        }
+        
+        .success-msg h2 {
+            margin-bottom: 8px;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>💰 Dashboard Financiero</h1>
-        <p class="subtitle" id="month-label">Cargando...</p>
     </div>
     
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="label">💸 Gastos</div>
-            <div class="value" id="total-expenses">$0.00</div>
+    <div class="tabs">
+        <button class="tab active" onclick="showSection('dashboard')">📊 Resumen</button>
+        <button class="tab" onclick="showSection('add')">➕ Añadir</button>
+    </div>
+    
+    <!-- Dashboard Section -->
+    <div id="dashboard" class="section active">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">💸 Gastos</div>
+                <div class="value" id="total-expenses">$0.00</div>
+            </div>
+            <div class="stat-card income">
+                <div class="label">💵 Ingresos</div>
+                <div class="value" id="total-income">$0.00</div>
+            </div>
+            <div class="stat-card balance">
+                <div class="label">⚖️ Balance</div>
+                <div class="value" id="balance">$0.00</div>
+            </div>
+            <div class="stat-card savings">
+                <div class="label">🎯 Ahorro</div>
+                <div class="value" id="savings-progress">0%</div>
+            </div>
         </div>
-        <div class="stat-card income">
-            <div class="label">💵 Ingresos</div>
-            <div class="value" id="total-income">$0.00</div>
+        
+        <div class="chart-container">
+            <div class="chart-title">📊 Gastos por Categoría</div>
+            <canvas id="categoryChart"></canvas>
         </div>
-        <div class="stat-card balance">
-            <div class="label">⚖️ Balance</div>
-            <div class="value" id="balance">$0.00</div>
-        </div>
-        <div class="stat-card savings">
-            <div class="label">🎯 Ahorro</div>
-            <div class="value" id="savings-progress">0%</div>
+        
+        <div class="chart-container">
+            <div class="chart-title">📈 Tendencia del Mes</div>
+            <canvas id="trendChart"></canvas>
         </div>
     </div>
     
-    <div class="chart-container">
-        <div class="chart-title">📊 Gastos por Categoría</div>
-        <canvas id="categoryChart"></canvas>
+    <!-- Add Expense Section -->
+    <div id="add" class="section">
+        <div id="add-form">
+            <div class="form-group">
+                <label>💵 MONTO (USD)</label>
+                <input type="number" id="amount" placeholder="0.00" step="0.01" inputmode="decimal">
+                <div class="quick-amounts">
+                    <button class="quick-btn" onclick="setAmount(5)">$5</button>
+                    <button class="quick-btn" onclick="setAmount(10)">$10</button>
+                    <button class="quick-btn" onclick="setAmount(20)">$20</button>
+                    <button class="quick-btn" onclick="setAmount(50)">$50</button>
+                    <button class="quick-btn" onclick="setAmount(100)">$100</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>🏷️ CATEGORÍA</label>
+                <div class="category-grid">
+                    <button class="category-btn" onclick="selectCategory(this, 'Comida')">
+                        <span class="icon">🍔</span>Comida
+                    </button>
+                    <button class="category-btn" onclick="selectCategory(this, 'Transporte')">
+                        <span class="icon">🚗</span>Transporte
+                    </button>
+                    <button class="category-btn" onclick="selectCategory(this, 'Servicios')">
+                        <span class="icon">📱</span>Servicios
+                    </button>
+                    <button class="category-btn" onclick="selectCategory(this, 'Salud')">
+                        <span class="icon">🏥</span>Salud
+                    </button>
+                    <button class="category-btn" onclick="selectCategory(this, 'Hogar')">
+                        <span class="icon">🏠</span>Hogar
+                    </button>
+                    <button class="category-btn" onclick="selectCategory(this, 'Otros')">
+                        <span class="icon">📦</span>Otros
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>📝 DESCRIPCIÓN (Opcional)</label>
+                <input type="text" id="description" placeholder="¿En qué gastaste?">
+            </div>
+            
+            <button class="btn-primary" id="submit-btn" onclick="submitExpense()" disabled>
+                ✅ Guardar Gasto
+            </button>
+        </div>
+        
+        <div id="success-view" class="success-msg" style="display: none;">
+            <div class="icon">✅</div>
+            <h2>¡Gasto Guardado!</h2>
+            <p id="success-detail"></p>
+            <button class="btn-primary" onclick="resetForm()">➕ Añadir Otro</button>
+        </div>
     </div>
-    
-    <div class="chart-container">
-        <div class="chart-title">📈 Tendencia del Mes</div>
-        <canvas id="trendChart"></canvas>
-    </div>
-    
-    <button class="btn-refresh" onclick="loadData()">🔄 Actualizar Datos</button>
     
     <script>
-        // Inicializar Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
         
-        // Aplicar tema de Telegram
-        document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
-        document.body.style.color = tg.themeParams.text_color || '#000000';
-        
-        // Variables para gráficos
+        let selectedCategory = null;
         let categoryChart = null;
         let trendChart = null;
         
-        // Función para cargar datos (simulados por ahora - se conectará al bot)
-        async function loadData() {
-            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                               'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            const now = new Date();
-            document.getElementById('month-label').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+        // Apply Telegram theme
+        if (tg.themeParams.bg_color) {
+            document.body.style.backgroundColor = tg.themeParams.bg_color;
+            document.body.style.color = tg.themeParams.text_color;
+        }
+        
+        function showSection(name) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function setAmount(val) {
+            document.getElementById('amount').value = val;
+            validateForm();
+        }
+        
+        function selectCategory(btn, cat) {
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedCategory = cat;
+            validateForm();
+        }
+        
+        function validateForm() {
+            const amount = document.getElementById('amount').value;
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = !(amount > 0 && selectedCategory);
+        }
+        
+        function submitExpense() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const description = document.getElementById('description').value || selectedCategory;
             
-            // NOTA: En producción, estos datos vendrán de una API endpoint del bot
-            // Por ahora usamos datos de ejemplo para demostrar la UI
+            // Send data to Telegram bot
+            const data = {
+                action: 'add_expense',
+                amount: amount,
+                category: selectedCategory,
+                description: description,
+                date: new Date().toISOString().split('T')[0]
+            };
+            
+            // Try to send via Telegram
+            try {
+                tg.sendData(JSON.stringify(data));
+            } catch (e) {
+                console.log('Telegram sendData not available');
+            }
+            
+            // Show success
+            document.getElementById('add-form').style.display = 'none';
+            document.getElementById('success-view').style.display = 'block';
+            document.getElementById('success-detail').textContent = 
+                `$${amount.toFixed(2)} en ${selectedCategory}`;
+            
+            // Haptic feedback
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+        
+        function resetForm() {
+            document.getElementById('amount').value = '';
+            document.getElementById('description').value = '';
+            selectedCategory = null;
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('add-form').style.display = 'block';
+            document.getElementById('success-view').style.display = 'none';
+        }
+        
+        async function loadData() {
+            // Sample data - in production this would come from an API
             const data = {
                 totalExpenses: 1250.50,
                 totalIncome: 2000.00,
@@ -194,13 +420,12 @@
                 dailyTrend: [45, 120, 80, 200, 150, 95, 180, 100, 75, 205]
             };
             
-            // Actualizar estadísticas
-            document.getElementById('total-expenses').textContent = `$${data.totalExpenses.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            document.getElementById('total-income').textContent = `$${data.totalIncome.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            document.getElementById('balance').textContent = `$${data.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('total-expenses').textContent = `$${data.totalExpenses.toFixed(2)}`;
+            document.getElementById('total-income').textContent = `$${data.totalIncome.toFixed(2)}`;
+            document.getElementById('balance').textContent = `$${data.balance.toFixed(2)}`;
             document.getElementById('savings-progress').textContent = `${data.savingsProgress}%`;
             
-            // Gráfico de categorías
+            // Category Chart
             const ctxCat = document.getElementById('categoryChart').getContext('2d');
             if (categoryChart) categoryChart.destroy();
             categoryChart = new Chart(ctxCat, {
@@ -214,23 +439,19 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
                 }
             });
             
-            // Gráfico de tendencia
+            // Trend Chart
             const ctxTrend = document.getElementById('trendChart').getContext('2d');
             if (trendChart) trendChart.destroy();
             trendChart = new Chart(ctxTrend, {
                 type: 'line',
                 data: {
-                    labels: data.dailyTrend.map((_, i) => `Día ${i + 1}`),
+                    labels: data.dailyTrend.map((_, i) => `${i + 1}`),
                     datasets: [{
-                        label: 'Gastos USD',
+                        label: 'USD',
                         data: data.dailyTrend,
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
@@ -240,24 +461,14 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
                 }
             });
-            
-            // Notificar a Telegram que terminamos
-            tg.MainButton.hide();
         }
         
-        // Cargar datos al inicio
+        // Init
+        document.getElementById('amount').addEventListener('input', validateForm);
         loadData();
     </script>
 </body>

@@ -828,6 +828,55 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ]
             await query.edit_message_text(formatted, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
 
+    elif action == "dup":
+        # dup_confirm_ID o dup_cancel
+        subaction = parts[1] if len(parts) > 1 else ""
+        
+        if subaction == "cancel":
+            await query.edit_message_text("🗑️ Duplicación cancelada.")
+        elif subaction == "confirm":
+            gasto_id = int(parts[2]) if len(parts) > 2 else None
+            
+            if not gasto_id:
+                await query.edit_message_text("❌ Error: ID de gasto no válido.")
+                return
+            
+            # Obtener gasto original
+            gastos = database.get_gastos_mes()
+            gasto_original = None
+            for g in gastos:
+                if g.get('id') == gasto_id:
+                    gasto_original = g
+                    break
+            
+            if not gasto_original:
+                await query.edit_message_text("❌ Error: Gasto original no encontrado.")
+                return
+            
+            # Registrar duplicado
+            user_name = query.from_user.first_name
+            data = {
+                "fecha": datetime.now().strftime("%Y-%m-%d"),
+                "monto": gasto_original['monto_usd'],
+                "moneda": "USD",
+                "concepto": gasto_original.get('concepto', ''),
+                "categoria": gasto_original.get('categoria', 'Otros')
+            }
+            
+            success, res_msg = sheets_manager.add_transaction(data, user_name, "", is_income=False)
+            
+            if success:
+                database.get_or_create_user(query.from_user.id, user_name)
+                database.update_streak(query.from_user.id)
+                await query.edit_message_text(
+                    f"✅ *Gasto duplicado*\n\n"
+                    f"💵 ${gasto_original['monto_usd']:.2f} en {gasto_original.get('categoria', 'Otros')}\n"
+                    f"👤 {user_name}",
+                    parse_mode="Markdown"
+                )
+            else:
+                await query.edit_message_text(f"❌ Error: {res_msg}")
+
 async def post_init(application: Application):
     commands = [
         BotCommand("start", "🏠 Inicio"),
@@ -844,6 +893,25 @@ async def post_init(application: Application):
         BotCommand("reporte", "📄 /reporte Excel"),
         BotCommand("consejo", "🕵️ /consejo Auditoría"),
         BotCommand("comparar", "🔄 Comparar con mes anterior"),
+        BotCommand("g", "⚡ /g Monto Categoria (Rápido)"),
+        BotCommand("score", "🎯 Tu puntaje financiero"),
+        BotCommand("logros", "🏆 Ver logros"),
+        BotCommand("ranking", "👨‍👩‍👧‍👦 Ranking familiar"),
+        BotCommand("silencio", "🔕 Modo silencioso"),
+        BotCommand("reto", "🎯 Retos mensuales"),
+        # V7.0
+        BotCommand("f", "📌 /f <atajo> (Gasto fijado)"),
+        BotCommand("preguntar", "🤖 Pregunta a la IA"),
+        BotCommand("limite", "💰 Límite diario"),
+        BotCommand("tendencias", "📈 Análisis de tendencias"),
+        BotCommand("proyeccion", "📊 Proyección de ahorro"),
+        BotCommand("email", "📧 Reportes por email"),
+        BotCommand("tag", "🏷️ Gastos por etiqueta"),
+        # Pendientes completados
+        BotCommand("csv", "📥 Importar gastos CSV"),
+        BotCommand("anos", "📅 Comparar años"),
+        BotCommand("galeria", "📸 Galería de recibos"),
+        BotCommand("duplicar", "🔁 Repetir último gasto"),
         BotCommand("webapp", "📱 Dashboard Visual"),
         BotCommand("nueva", "🆕 /nueva <NombreCat>")
     ]
@@ -861,6 +929,650 @@ async def post_init(application: Application):
     application.job_queue.run_daily(weekly_summary_job, time=dt_time(9, 0), days=(0,))  # 0 = Lunes
     # Recordatorio de presupuesto los días 1, 15 y 30
     application.job_queue.run_daily(budget_reminder_job, time=dt_time(10, 30))
+
+# ==================== COMANDOS DE GAMIFICACIÓN ====================
+
+async def gasto_rapido_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/g - Registro rápido: /g 50 comida"""
+    await register_chat_if_new(update)
+    
+    if not context.args or len(context.args) < 2:
+        await update.message.reply_text("⚡ *Gasto Rápido*\n\nUso: `/g 50 comida`\nO: `/g 25.50 taxi almuerzo`", parse_mode="Markdown")
+        return
+    
+    try:
+        monto = float(context.args[0])
+        categoria = context.args[1].capitalize()
+        concepto = " ".join(context.args[2:]) if len(context.args) > 2 else categoria
+        
+        user_id = update.effective_user.id
+        user_name = update.effective_user.first_name
+        
+        # Crear perfil si no existe
+        database.get_or_create_user(user_id, user_name)
+        
+        # Verificar modo silencioso
+        silent = database.is_silent_mode(user_id)
+        
+        data = {
+            "fecha": datetime.now().strftime("%Y-%m-%d"),
+            "monto": monto,
+            "moneda": "USD",
+            "concepto": concepto,
+            "categoria": categoria
+        }
+        
+        success, msg = sheets_manager.add_transaction(data, user_name, "", is_income=False)
+        
+        if success:
+            # Actualizar streak y verificar logros
+            streak_info = database.update_streak(user_id)
+            nuevos_logros = database.check_and_award_logros(user_id)
+            
+            if silent:
+                await update.message.reply_text("✅", parse_mode="Markdown")
+            else:
+                response = f"⚡ *${monto:.2f}* en _{categoria}_"
+                if streak_info and streak_info['nuevo_dia']:
+                    response += f" | 🔥 Racha: {streak_info['streak']}"
+                
+                for logro in nuevos_logros:
+                    response += f"\n\n🏆 *¡LOGRO DESBLOQUEADO!*\n{logro['icono']} {logro['nombre']}"
+                
+                await update.message.reply_text(response, parse_mode="Markdown")
+        else:
+            await update.message.reply_text(f"❌ Error: {msg}")
+            
+    except ValueError:
+        await update.message.reply_text("⚠️ El primer argumento debe ser un número.")
+
+async def score_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/score - Ver puntaje financiero."""
+    user_id = update.effective_user.id
+    user_name = update.effective_user.first_name
+    
+    database.get_or_create_user(user_id, user_name)
+    score = database.calculate_score_financiero(user_id)
+    stats = database.get_user_stats(user_id)
+    
+    # Barra visual
+    filled = int(score / 10)
+    bar = "█" * filled + "░" * (10 - filled)
+    
+    # Emoji según score
+    if score >= 80: emoji = "🌟"
+    elif score >= 60: emoji = "👍"
+    elif score >= 40: emoji = "😐"
+    else: emoji = "😰"
+    
+    msg = f"{emoji} *Tu Score Financiero*\n\n"
+    msg += f"[{bar}] *{score}/100*\n\n"
+    msg += f"🔥 Racha actual: *{stats.get('streak_actual', 0)}* días\n"
+    msg += f"📝 Gastos registrados: *{stats.get('total_gastos_registrados', 0)}*\n"
+    msg += f"⭐ Experiencia: *{stats.get('experiencia', 0)}* pts\n"
+    msg += f"🏆 Logros: *{stats.get('logros_count', 0)}*\n\n"
+    
+    # Consejos
+    if score < 50:
+        msg += "💡 _Registra más gastos y configura presupuestos para mejorar._"
+    elif score < 80:
+        msg += "💡 _¡Vas bien! Mantén la racha y ahorra más._"
+    else:
+        msg += "💡 _¡Excelente! Tienes finanzas saludables._"
+    
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
+async def logros_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/logros - Ver logros desbloqueados y pendientes."""
+    user_id = update.effective_user.id
+    stats = database.get_user_stats(user_id)
+    
+    if not stats:
+        await update.message.reply_text("❌ Primero registra un gasto para crear tu perfil.")
+        return
+    
+    conn = database.get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM logros ORDER BY puntos")
+    todos_logros = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    desbloqueados = [l['codigo'] for l in stats.get('logros', [])]
+    
+    msg = "🏆 *Tus Logros*\n\n"
+    
+    for logro in todos_logros:
+        if logro['codigo'] in desbloqueados:
+            msg += f"✅ {logro['icono']} *{logro['nombre']}* (+{logro['puntos']}pts)\n"
+        else:
+            msg += f"🔒 {logro['icono']} _{logro['nombre']}_\n"
+    
+    msg += f"\n_Desbloqueados: {len(desbloqueados)}/{len(todos_logros)}_"
+    
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
+async def ranking_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/ranking - Ver ranking familiar por score."""
+    ranking = database.get_ranking()
+    
+    if not ranking:
+        await update.message.reply_text("📊 No hay suficientes usuarios para mostrar ranking.")
+        return
+    
+    msg = "👨‍👩‍👧‍👦 *Ranking Familiar*\n\n"
+    
+    medals = ["🥇", "🥈", "🥉"]
+    for i, user in enumerate(ranking):
+        medal = medals[i] if i < 3 else f"{i+1}."
+        nombre = user['nombre'] or "Anónimo"
+        msg += f"{medal} *{nombre}*: {user['score_financiero']}pts"
+        if user['streak_actual'] and user['streak_actual'] > 0:
+            msg += f" 🔥{user['streak_actual']}"
+        msg += "\n"
+    
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
+async def silencio_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/silencio - Toggle modo silencioso."""
+    user_id = update.effective_user.id
+    database.get_or_create_user(user_id, update.effective_user.first_name)
+    
+    current = database.is_silent_mode(user_id)
+    new_mode = not current
+    database.set_silent_mode(user_id, new_mode)
+    
+    if new_mode:
+        await update.message.reply_text("🔕 *Modo silencioso activado*\n\nAhora `/g` solo responderá con ✅", parse_mode="Markdown")
+    else:
+        await update.message.reply_text("🔔 *Modo silencioso desactivado*\n\nVerás respuestas completas.", parse_mode="Markdown")
+
+async def reto_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/reto - Ver o crear retos mensuales."""
+    if not context.args:
+        # Mostrar retos activos
+        retos = database.get_retos_activos()
+        if not retos:
+            await update.message.reply_text(
+                "🎯 *Retos Mensuales*\n\n"
+                "No hay retos este mes.\n\n"
+                "Crear uno: `/reto crear \"Gastar menos de 200 en comida\" comida 200`",
+                parse_mode="Markdown"
+            )
+            return
+        
+        msg = "🎯 *Retos Mensuales*\n\n"
+        for r in retos:
+            msg += f"• *{r['titulo']}*\n  Meta: ${r['meta_valor']}"
+            if r['categoria']:
+                msg += f" en {r['categoria']}"
+            msg += "\n\n"
+        
+        await update.message.reply_text(msg, parse_mode="Markdown")
+    
+    elif context.args[0] == "crear" and len(context.args) >= 4:
+        titulo = context.args[1]
+        categoria = context.args[2] if len(context.args) > 3 else None
+        try:
+            meta = float(context.args[-1])
+            if database.create_reto_mensual(titulo, "", "gasto_max", meta, categoria):
+                await update.message.reply_text(f"✅ Reto creado: *{titulo}*", parse_mode="Markdown")
+            else:
+                await update.message.reply_text("❌ Error creando reto.")
+        except:
+            await update.message.reply_text("⚠️ Formato: `/reto crear \"Título\" categoria monto`", parse_mode="Markdown")
+
+# ==================== COMANDOS V7.0 ====================
+
+async def fijado_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/f - Gasto fijado ultra-rápido o gestión de atajos."""
+    user_id = update.effective_user.id
+    user_name = update.effective_user.first_name
+    
+    if not context.args:
+        # Mostrar atajos disponibles
+        fijados = database.get_gastos_fijados(user_id)
+        if not fijados:
+            await update.message.reply_text(
+                "📌 *Gastos Fijados*\n\n"
+                "No tienes atajos configurados.\n\n"
+                "Crear uno: `/f crear café 2.50 comida`\n"
+                "Usar: `/f café` → Registra $2.50 en Comida",
+                parse_mode="Markdown"
+            )
+            return
+        
+        msg = "📌 *Tus Gastos Fijados*\n\n"
+        for f in fijados:
+            msg += f"• `/f {f['atajo']}` → ${f['monto']:.2f} ({f['categoria']})\n"
+        msg += "\n_Usa `/f borrar <atajo>` para eliminar_"
+        await update.message.reply_text(msg, parse_mode="Markdown")
+        return
+    
+    action = context.args[0].lower()
+    
+    if action == "crear" and len(context.args) >= 4:
+        # /f crear café 2.50 comida
+        atajo = context.args[1]
+        try:
+            monto = float(context.args[2])
+            categoria = context.args[3].capitalize()
+            if database.add_gasto_fijado(user_id, atajo, monto, categoria):
+                await update.message.reply_text(f"✅ Atajo creado: `/f {atajo}` → ${monto:.2f} en {categoria}", parse_mode="Markdown")
+            else:
+                await update.message.reply_text("❌ Error creando atajo.")
+        except:
+            await update.message.reply_text("⚠️ Formato: `/f crear <atajo> <monto> <categoria>`", parse_mode="Markdown")
+    
+    elif action == "borrar" and len(context.args) >= 2:
+        atajo = context.args[1]
+        if database.delete_gasto_fijado(user_id, atajo):
+            await update.message.reply_text(f"🗑️ Atajo `{atajo}` eliminado.", parse_mode="Markdown")
+        else:
+            await update.message.reply_text(f"❌ No encontré el atajo `{atajo}`.", parse_mode="Markdown")
+    
+    else:
+        # Usar un atajo existente
+        atajo = context.args[0]
+        fijado = database.get_gasto_fijado(user_id, atajo)
+        
+        if not fijado:
+            await update.message.reply_text(f"❌ Atajo `{atajo}` no existe. Usa `/f` para ver los disponibles.", parse_mode="Markdown")
+            return
+        
+        # Registrar el gasto
+        data = {
+            "fecha": datetime.now().strftime("%Y-%m-%d"),
+            "monto": fijado['monto'],
+            "moneda": "USD",
+            "concepto": fijado['concepto'],
+            "categoria": fijado['categoria']
+        }
+        
+        success, msg = sheets_manager.add_transaction(data, user_name, "", is_income=False)
+        
+        if success:
+            database.get_or_create_user(user_id, user_name)
+            streak_info = database.update_streak(user_id)
+            
+            # Verificar límite
+            limite_check = database.check_limite_gasto(user_id)
+            
+            response = f"⚡ *${fijado['monto']:.2f}* en _{fijado['categoria']}_"
+            if streak_info and streak_info['nuevo_dia']:
+                response += f" | 🔥{streak_info['streak']}"
+            
+            if limite_check and limite_check['pct'] >= 80:
+                response += f"\n\n⚠️ *ALERTA:* Llevas ${limite_check['spent_today']:.2f} hoy ({limite_check['pct']:.0f}% de tu límite)"
+            
+            await update.message.reply_text(response, parse_mode="Markdown")
+        else:
+            await update.message.reply_text(f"❌ Error: {msg}")
+
+async def preguntar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/preguntar - Asistente conversacional IA."""
+    from gemini_analyzer import answer_financial_question
+    
+    if not context.args:
+        await update.message.reply_text(
+            "🤖 *Asistente Financiero*\n\n"
+            "Pregúntame lo que quieras:\n"
+            "• `/preguntar ¿Cuánto gasté en comida?`\n"
+            "• `/preguntar ¿Cómo van mis ahorros?`\n"
+            "• `/preguntar ¿Estoy gastando mucho?`",
+            parse_mode="Markdown"
+        )
+        return
+    
+    question = " ".join(context.args)
+    msg = await update.message.reply_text("🤔 Pensando...")
+    
+    try:
+        summary = sheets_manager.get_monthly_summary()
+        savings = sheets_manager.get_savings()
+        
+        answer = answer_financial_question(question, summary, savings)
+        await msg.edit_text(f"🤖 {answer}", parse_mode="Markdown")
+    except Exception as e:
+        await msg.edit_text(f"❌ Error: {e}")
+
+async def limite_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/limite - Configurar límite de gasto diario."""
+    user_id = update.effective_user.id
+    
+    if not context.args:
+        # Ver límite actual
+        limite = database.get_limite_gasto(user_id)
+        check = database.check_limite_gasto(user_id)
+        
+        if not limite or limite['limite_diario'] <= 0:
+            await update.message.reply_text(
+                "💰 *Límite de Gasto*\n\n"
+                "No tienes límite configurado.\n"
+                "Usa: `/limite 50` para establecer $50/día",
+                parse_mode="Markdown"
+            )
+            return
+        
+        msg = f"💰 *Tu Límite Diario:* ${limite['limite_diario']:.2f}\n\n"
+        if check:
+            filled = int(check['pct'] / 10)
+            bar = "█" * min(filled, 10) + "░" * max(0, 10 - filled)
+            msg += f"Hoy: [{bar}] ${check['spent_today']:.2f} ({check['pct']:.0f}%)"
+            if check['exceeded']:
+                msg += "\n\n🚨 *¡LÍMITE EXCEDIDO!*"
+        
+        await update.message.reply_text(msg, parse_mode="Markdown")
+        return
+    
+    try:
+        limite = float(context.args[0])
+        database.get_or_create_user(user_id, update.effective_user.first_name)
+        if database.set_limite_gasto(user_id, limite_diario=limite):
+            await update.message.reply_text(f"✅ Límite diario fijado en *${limite:.2f}*", parse_mode="Markdown")
+        else:
+            await update.message.reply_text("❌ Error guardando límite.")
+    except:
+        await update.message.reply_text("⚠️ Uso: `/limite 50`", parse_mode="Markdown")
+
+async def email_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/email - Configurar email para reportes."""
+    user_id = update.effective_user.id
+    
+    if not context.args:
+        await update.message.reply_text(
+            "📧 *Reportes por Email*\n\n"
+            "Configura tu email para recibir resúmenes:\n"
+            "• `/email tucorreo@gmail.com` (semanal)\n"
+            "• `/email tucorreo@gmail.com mensual`",
+            parse_mode="Markdown"
+        )
+        return
+    
+    email = context.args[0]
+    frecuencia = context.args[1] if len(context.args) > 1 else "semanal"
+    
+    if "@" not in email:
+        await update.message.reply_text("⚠️ Email inválido.")
+        return
+    
+    if database.set_email_reporte(user_id, email, frecuencia):
+        await update.message.reply_text(
+            f"✅ Email configurado: *{email}*\n"
+            f"📅 Frecuencia: *{frecuencia}*\n\n"
+            "_Recibirás reportes automáticos._",
+            parse_mode="Markdown"
+        )
+    else:
+        await update.message.reply_text("❌ Error guardando email.")
+
+async def tag_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/tag - Ver gastos por etiqueta."""
+    if not context.args:
+        await update.message.reply_text(
+            "🏷️ *Etiquetas*\n\n"
+            "Ver gastos por tag: `/tag viaje`\n\n"
+            "Para añadir tags, incluye #hashtag en tu mensaje:\n"
+            "_'Gasté 50 en hotel #viaje #trabajo'_",
+            parse_mode="Markdown"
+        )
+        return
+    
+    tag = context.args[0].replace("#", "")
+    gastos = database.get_gastos_by_tag(tag)
+    
+    if not gastos:
+        await update.message.reply_text(f"🏷️ No hay gastos con el tag `#{tag}`", parse_mode="Markdown")
+        return
+    
+    total = sum(g['monto_usd'] or 0 for g in gastos)
+    msg = f"🏷️ *Gastos con #{tag}*\n\n"
+    
+    for g in gastos[:10]:
+        msg += f"• {g['fecha']}: ${g['monto_usd']:.2f} - {g['concepto']}\n"
+    
+    msg += f"\n*Total:* ${total:.2f} ({len(gastos)} gastos)"
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
+async def tendencias_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/tendencias - Análisis de tendencias con IA."""
+    from gemini_analyzer import analyze_spending_trends
+    
+    msg = await update.message.reply_text("📊 Analizando tendencias...")
+    
+    try:
+        summary = sheets_manager.get_monthly_summary()
+        if not summary or not summary.get('daily_trend'):
+            await msg.edit_text("❌ No hay suficientes datos para analizar tendencias.")
+            return
+        
+        result = analyze_spending_trends(summary['daily_trend'])
+        
+        if not result.get('success'):
+            await msg.edit_text("❌ Error analizando tendencias.")
+            return
+        
+        data = result['data']
+        response = "📈 *Análisis de Tendencias*\n\n"
+        response += f"📊 Tendencia general: *{data.get('tendencia_general', 'N/A')}*\n"
+        response += f"⬆️ Categoría que crece: *{data.get('categoria_creciente', 'N/A')}*\n"
+        response += f"⬇️ Categoría que baja: *{data.get('categoria_decreciente', 'N/A')}*\n\n"
+        response += f"🔍 *Patrón detectado:*\n_{data.get('patron_detectado', 'N/A')}_\n\n"
+        response += f"💡 *Recomendación:*\n{data.get('recomendacion', 'N/A')}"
+        
+        await msg.edit_text(response, parse_mode="Markdown")
+    except Exception as e:
+        await msg.edit_text(f"❌ Error: {e}")
+
+async def proyeccion_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/proyeccion - Proyección de ahorro."""
+    from gemini_analyzer import generate_savings_projection
+    
+    savings = sheets_manager.get_savings()
+    if not savings:
+        await update.message.reply_text("💡 No tienes metas de ahorro. Crea una con `/ahorro Nombre Monto`.", parse_mode="Markdown")
+        return
+    
+    msg = "💰 *Proyección de Ahorros*\n\n"
+    
+    for s in savings:
+        try:
+            current = float(s.get('Ahorrado Actual', 0))
+            goal = float(s.get('Objetivo USD', 0))
+            
+            # Estimar tasa mensual (simplificado)
+            monthly_rate = current / 3 if current > 0 else 0  # Asume 3 meses de actividad
+            
+            proj = generate_savings_projection(current, goal, monthly_rate)
+            msg += f"🎯 *{s['Meta']}*\n"
+            msg += f"   Actual: ${current:,.2f} / ${goal:,.2f}\n"
+            msg += f"   📅 {proj['message']}\n\n"
+        except:
+            continue
+    
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
+async def csv_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/csv - Importar gastos desde archivo CSV."""
+    if not update.message.document:
+        await update.message.reply_text(
+            "📥 *Importar CSV*\n\n"
+            "Envía un archivo CSV con este formato:\n"
+            "```\nfecha,monto,categoria,concepto\n2026-01-15,50.00,Comida,Almuerzo\n```\n\n"
+            "Adjunta el archivo como documento respondiendo a este mensaje.",
+            parse_mode="Markdown"
+        )
+        return
+    
+    try:
+        doc = update.message.document
+        if not doc.file_name.endswith('.csv'):
+            await update.message.reply_text("⚠️ Solo acepto archivos .csv")
+            return
+        
+        msg = await update.message.reply_text("📊 Procesando CSV...")
+        
+        file = await context.bot.get_file(doc.file_id)
+        csv_bytes = await file.download_as_bytearray()
+        content = csv_bytes.decode('utf-8')
+        
+        import csv
+        from io import StringIO
+        
+        reader = csv.DictReader(StringIO(content))
+        imported = 0
+        errors = 0
+        
+        user_name = update.effective_user.first_name
+        
+        for row in reader:
+            try:
+                data = {
+                    "fecha": row.get('fecha', datetime.now().strftime("%Y-%m-%d")),
+                    "monto": float(row.get('monto', 0)),
+                    "moneda": row.get('moneda', 'USD'),
+                    "concepto": row.get('concepto', row.get('descripcion', '')),
+                    "categoria": row.get('categoria', 'Otros')
+                }
+                
+                success, _ = sheets_manager.add_transaction(data, user_name, "", is_income=False)
+                if success:
+                    imported += 1
+                else:
+                    errors += 1
+            except:
+                errors += 1
+        
+        await msg.edit_text(
+            f"✅ *Importación Completada*\n\n"
+            f"📊 Importados: *{imported}* gastos\n"
+            f"❌ Errores: *{errors}*",
+            parse_mode="Markdown"
+        )
+        
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error procesando CSV: {e}")
+
+async def anos_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/años - Comparar gastos por mes del año."""
+    msg = await update.message.reply_text("📅 Generando comparativa anual...")
+    
+    try:
+        now = datetime.now()
+        data_by_month = {}
+        
+        # Obtener datos de los últimos 12 meses
+        for i in range(12):
+            month = now.month - i
+            year = now.year
+            if month <= 0:
+                month += 12
+                year -= 1
+            
+            try:
+                summary = sheets_manager.get_monthly_summary(year, month)
+                if summary:
+                    key = f"{year}-{month:02d}"
+                    data_by_month[key] = summary.get('total_usd', 0)
+            except:
+                continue
+        
+        if len(data_by_month) < 2:
+            await msg.edit_text("❌ No hay suficientes datos para comparar (necesito al menos 2 meses).")
+            return
+        
+        # Ordenar por fecha
+        data_by_month = dict(sorted(data_by_month.items()))
+        
+        chart = visualizer.generate_yearly_comparison(data_by_month)
+        
+        if chart:
+            total = sum(data_by_month.values())
+            avg = total / len(data_by_month)
+            
+            caption = f"📅 *Comparativa Anual*\n\n"
+            caption += f"📊 Total {len(data_by_month)} meses: *${total:,.2f}*\n"
+            caption += f"📈 Promedio mensual: *${avg:,.2f}*"
+            
+            await update.message.reply_photo(photo=chart, caption=caption, parse_mode="Markdown")
+            await msg.delete()
+        else:
+            await msg.edit_text("❌ No se pudo generar el gráfico.")
+            
+    except Exception as e:
+        await msg.edit_text(f"❌ Error: {e}")
+
+async def galeria_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/galeria - Ver recibos guardados en Drive."""
+    msg = await update.message.reply_text("📸 Buscando recibos...")
+    
+    try:
+        # Obtener lista de imágenes del mes desde Drive
+        files = drive_manager.list_receipts()
+        
+        if not files:
+            await msg.edit_text("📭 No hay recibos guardados este mes.")
+            return
+        
+        response = "📸 *Galería de Recibos*\n\n"
+        for i, f in enumerate(files[:20], 1):
+            response += f"{i}. [{f['name']}]({f['webViewLink']})\n"
+        
+        response += f"\n_Total: {len(files)} recibos_"
+        
+        await msg.edit_text(response, parse_mode="Markdown", disable_web_page_preview=True)
+        
+    except Exception as e:
+        await msg.edit_text(f"❌ Error: {e}")
+
+async def duplicar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/duplicar - Repetir el último gasto registrado."""
+    user_id = update.effective_user.id
+    user_name = update.effective_user.first_name
+    
+    try:
+        # Obtener último gasto del usuario desde SQLite
+        gastos = database.get_gastos_mes()
+        
+        if not gastos:
+            await update.message.reply_text("❌ No hay gastos que duplicar.")
+            return
+        
+        # Encontrar el último gasto del usuario
+        ultimo = None
+        for g in gastos:
+            if g.get('responsable', '').lower() == user_name.lower():
+                ultimo = g
+                break
+        
+        if not ultimo:
+            ultimo = gastos[0]  # Si no encuentra del usuario, tomar el más reciente
+        
+        # Crear nuevo gasto con fecha de hoy
+        data = {
+            "fecha": datetime.now().strftime("%Y-%m-%d"),
+            "monto": ultimo['monto_usd'],
+            "moneda": "USD",
+            "concepto": ultimo.get('concepto', ''),
+            "categoria": ultimo.get('categoria', 'Otros')
+        }
+        
+        keyboard = [
+            [InlineKeyboardButton("✅ Confirmar", callback_data=f"dup_confirm_{ultimo['id']}")],
+            [InlineKeyboardButton("❌ Cancelar", callback_data="dup_cancel")]
+        ]
+        
+        await update.message.reply_text(
+            f"🔁 *Duplicar Gasto*\n\n"
+            f"💵 Monto: *${ultimo['monto_usd']:.2f}*\n"
+            f"📝 Concepto: {ultimo.get('concepto', 'N/A')}\n"
+            f"🏷️ Categoría: {ultimo.get('categoria', 'Otros')}\n\n"
+            f"¿Registrar este gasto hoy?",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: {e}")
 
 async def budget_reminder_job(context: ContextTypes.DEFAULT_TYPE):
     """Recordatorio de actualización de presupuesto los días 1, 15 y 30."""
@@ -936,8 +1648,30 @@ def main():
     application.add_handler(CommandHandler("consejo", consejo_command))
     application.add_handler(CommandHandler("webapp", webapp_command))
     application.add_handler(CommandHandler("comparar", comparar_command))
+    # Gamificación
+    application.add_handler(CommandHandler("g", gasto_rapido_command))
+    application.add_handler(CommandHandler("score", score_command))
+    application.add_handler(CommandHandler("logros", logros_command))
+    application.add_handler(CommandHandler("ranking", ranking_command))
+    application.add_handler(CommandHandler("silencio", silencio_command))
+    application.add_handler(CommandHandler("reto", reto_command))
+    # V7.0 - Productividad y Análisis
+    application.add_handler(CommandHandler("f", fijado_command))
+    application.add_handler(CommandHandler("preguntar", preguntar_command))
+    application.add_handler(CommandHandler("limite", limite_command))
+    application.add_handler(CommandHandler("email", email_command))
+    application.add_handler(CommandHandler("tag", tag_command))
+    application.add_handler(CommandHandler("tendencias", tendencias_command))
+    application.add_handler(CommandHandler("proyeccion", proyeccion_command))
+    # Pendientes V7.0
+    application.add_handler(CommandHandler("csv", csv_command))
+    application.add_handler(CommandHandler("anos", anos_command))
+    application.add_handler(CommandHandler("galeria", galeria_command))
+    application.add_handler(CommandHandler("duplicar", duplicar_command))
+    # Mensajes y documentos
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     application.add_handler(MessageHandler(filters.VOICE, handle_voice))
+    application.add_handler(MessageHandler(filters.Document.ALL, csv_command))  # Para importar CSV
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     application.add_handler(CallbackQueryHandler(handle_callback))
     application.run_polling()

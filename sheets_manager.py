@@ -3,6 +3,7 @@ Gestor de Google Sheets: Archivos Mensuales (Gastos_YYYY_MM)
 """
 import gspread
 from google.oauth2.service_account import Credentials
+import google_auth
 from datetime import datetime, timedelta
 import drive_manager
 from config import GOOGLE_CREDENTIALS_FILE, GOOGLE_DRIVE_FOLDER_ID
@@ -21,9 +22,8 @@ _client = None
 def get_client():
     global _client
     if _client is None:
-        logger.info(f"DEBUG: Initializing Google client with file {GOOGLE_CREDENTIALS_FILE}")
         try:
-            creds = Credentials.from_service_account_file(GOOGLE_CREDENTIALS_FILE, scopes=SCOPES)
+            creds = google_auth.get_credentials(scopes=SCOPES)
             _client = gspread.authorize(creds)
             logger.info("DEBUG: Google client initialized successfully")
         except Exception as e:

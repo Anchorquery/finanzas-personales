@@ -4,6 +4,7 @@ Gestor de Google Drive para subir y organizar comprobantes
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from google.oauth2.service_account import Credentials
+import google_auth
 import io
 from datetime import datetime
 from config import GOOGLE_DRIVE_FOLDER_ID, GOOGLE_CREDENTIALS_FILE
@@ -17,10 +18,7 @@ def get_drive_service():
     """Obtiene el servicio de Drive autenticado."""
     global _drive_service
     if _drive_service is None:
-        creds = Credentials.from_service_account_file(
-            GOOGLE_CREDENTIALS_FILE,
-            scopes=SCOPES
-        )
+        creds = google_auth.get_credentials(scopes=SCOPES)
         _drive_service = build('drive', 'v3', credentials=creds)
     return _drive_service
 

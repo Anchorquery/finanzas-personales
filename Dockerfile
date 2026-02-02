@@ -25,21 +25,33 @@ RUN echo 'server { \
     } \
     }' > /etc/nginx/sites-enabled/default
 
+# Evitar que Python bufferee los logs y configurar zona horaria si fuera necesario
+ENV PYTHONUNBUFFERED=1
+
 # Configurar supervisor para correr bot + nginx
 RUN echo '[supervisord] \n\
-    nodaemon=true \n\
-    \n\
-    [program:nginx] \n\
-    command=nginx -g "daemon off;" \n\
-    autostart=true \n\
-    autorestart=true \n\
-    \n\
-    [program:bot] \n\
-    command=python bot.py \n\
-    autostart=true \n\
-    autorestart=true \n\
-    directory=/app \n\
-    ' > /etc/supervisor/conf.d/supervisord.conf
+nodaemon=true \n\
+user=root \n\
+\n\
+[program:nginx] \n\
+command=nginx -g "daemon off;" \n\
+autostart=true \n\
+autorestart=true \n\
+stdout_logfile=/dev/stdout \n\
+stdout_logfile_maxbytes=0 \n\
+stderr_logfile=/dev/stderr \n\
+stderr_logfile_maxbytes=0 \n\
+\n\
+[program:bot] \n\
+command=python bot.py \n\
+autostart=true \n\
+autorestart=true \n\
+directory=/app \n\
+stdout_logfile=/dev/stdout \n\
+stdout_logfile_maxbytes=0 \n\
+stderr_logfile=/dev/stderr \n\
+stderr_logfile_maxbytes=0 \n\
+' > /etc/supervisor/conf.d/supervisord.conf
 
 # Exponer puerto 80 para webapp
 EXPOSE 80

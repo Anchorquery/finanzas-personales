@@ -1,5 +1,6 @@
 import drive_manager
 import sheets_manager
+import google_auth
 import logging
 from config import GOOGLE_DRIVE_FOLDER_ID
 from datetime import datetime
@@ -34,6 +35,15 @@ def verify_system():
             
         # 3. Probar gspread (Google Sheets)
         print("\n3️⃣ Probando Google Sheets (gspread)...")
+        creds = google_auth.get_credentials(scopes=sheets_manager.SCOPES)
+        pk = creds.signer.key_id if hasattr(creds.signer, 'key_id') else "Desconocido"
+        print(f"✅ Credenciales cargadas. Private Key ID: {pk}")
+        
+        # Diagnóstico de PEM
+        raw_pk = creds._private_key if hasattr(creds, '_private_key') else None
+        if raw_pk:
+            print(f"📊 Diagnóstico PEM: {len(raw_pk)} caracteres, {raw_pk.count(chr(10))} saltos de línea.")
+        
         client = sheets_manager.get_client()
         print("✅ Cliente de Sheets inicializado.")
         

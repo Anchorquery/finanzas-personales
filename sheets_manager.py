@@ -21,8 +21,14 @@ _client = None
 def get_client():
     global _client
     if _client is None:
-        creds = Credentials.from_service_account_file(GOOGLE_CREDENTIALS_FILE, scopes=SCOPES)
-        _client = gspread.authorize(creds)
+        print(f"DEBUG: Initializing Google client with file {GOOGLE_CREDENTIALS_FILE}")
+        try:
+            creds = Credentials.from_service_account_file(GOOGLE_CREDENTIALS_FILE, scopes=SCOPES)
+            _client = gspread.authorize(creds)
+            print("DEBUG: Google client initialized successfully")
+        except Exception as e:
+            print(f"DEBUG: ERROR initializing Google client: {str(e)}")
+            raise e
     return _client
 
 def get_monthly_spreadsheet(year: int = None, month: int = None):
@@ -34,13 +40,21 @@ def get_monthly_spreadsheet(year: int = None, month: int = None):
     if not month: month = datetime.now().month
     
     filename = f"Gastos_{year}_{month:02d}"
+    print(f"DEBUG: Attempting to get spreadsheet: {filename}")
     
     # 1. Buscar archivo
-    file_id = drive_manager.search_file_in_folder(GOOGLE_DRIVE_FOLDER_ID, filename, "application/vnd.google-apps.spreadsheet")
+    try:
+        file_id = drive_manager.search_file_in_folder(GOOGLE_DRIVE_FOLDER_ID, filename, "application/vnd.google-apps.spreadsheet")
+        print(f"DEBUG: drive_manager.search_file_in_folder returned file_id: {file_id}")
+    except Exception as e:
+        print(f"DEBUG: ERROR in search_file_in_folder: {str(e)}")
+        raise e
     
     # Fallback: Espacio al inicio
     if not file_id:
+        print("DEBUG: File not found with exact name, trying with leading space")
         file_id = drive_manager.search_file_in_folder(GOOGLE_DRIVE_FOLDER_ID, f" {filename}", "application/vnd.google-apps.spreadsheet")
+        print(f"DEBUG: lead-space search returned: {file_id}")
     
     if not file_id:
         # MODO MANUAL: No podemos crear archios (Cuota 0).
@@ -229,7 +243,9 @@ def get_exchange_rate(ss=None) -> float:
         sheet = get_config_sheet(ss)
         val = sheet.acell('B2').value 
         return float(val.replace(",", ".")) if val else 1.0
-    except: return 1.0
+    except Exception as e: 
+        print(f"DEBUG: Error in get_exchange_rate: {str(e)}")
+        return 1.0
 
 def set_exchange_rate(rate: float, source: str = "MANUAL", ss=None, bcv: float = 0, paralelo: float = 0) -> tuple[bool, str]:
     try:

@@ -239,6 +239,7 @@ async def hoja_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             disable_web_page_preview=True
         )
     else:
+        print("DEBUG: hoja_command failed - sheets_manager.get_sheet_url() returned None")
         await update.message.reply_text("❌ No se pudo obtener el enlace de la hoja.")
 
 async def analisis_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -317,6 +318,11 @@ async def budget_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❌ Error guardando presupuesto.")
     except ValueError:
         await update.message.reply_text("⚠️ El monto debe ser un número.")
+    except Exception as e:
+        import traceback
+        print(f"DEBUG: Error in budget_command: {str(e)}")
+        traceback.print_exc()
+        await update.message.reply_text("❌ Error inesperado guardando presupuesto.")
 
 async def ahorro_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Gestión de ahorros: /ahorro Meta 500 o /ahorro +Meta 50"""

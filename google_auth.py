@@ -39,12 +39,19 @@ def get_credentials(scopes):
             
             if "private_key" in info:
                 # El "Invalid JWT Signature" suele ser por escapes incorrectos
-                orig_key = info["private_key"]
-                info["private_key"] = info["private_key"].replace("\\n", "\n")
-                if orig_key != info["private_key"]:
-                    logger.info("DEBUG: Se corrigieron secuencias \\n en la clave privada.")
+                # En Coolify, a veces el archivo guardado tiene doble escape: \\n o incluso \\\\n
+                pk = info["private_key"]
+                
+                # 1. Reemplazar "\\n" (4 chars) o "\\n" (2 chars) por saltos de línea reales
+                pk_clean = pk.replace("\\\\n", "\n").replace("\\n", "\n")
+                
+                # 2. Asegurarse de que no queden escapes residuales y que el formato sea correcto
+                info["private_key"] = pk_clean
+                
+                if pk != pk_clean:
+                    logger.info("DEBUG: Se corrigió el formato de la clave privada (doble escape detectado).")
                 else:
-                    logger.info("DEBUG: No se detectaron secuencias \\n literales en la clave privada.")
+                    logger.info("DEBUG: No se detectaron secuencias de escape literales en la clave privada.")
             
             return Credentials.from_service_account_info(info, scopes=scopes)
         except Exception as e:

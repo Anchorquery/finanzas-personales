@@ -44,10 +44,11 @@ def get_monthly_spreadsheet(year: int = None, month: int = None):
     
     # 1. Buscar archivo
     try:
+        drive_service = drive_manager.get_drive_service()
         file_id = drive_manager.search_file_in_folder(GOOGLE_DRIVE_FOLDER_ID, filename, "application/vnd.google-apps.spreadsheet")
         logger.info(f"DEBUG: drive_manager.search_file_in_folder returned file_id: {file_id}")
     except Exception as e:
-        logger.error(f"DEBUG: ERROR in search_file_in_folder: {str(e)}", exc_info=True)
+        logger.error(f"DEBUG: ERROR in search_file_in_folder/get_drive_service: {str(e)}", exc_info=True)
         raise e
     
     # Fallback: Espacio al inicio

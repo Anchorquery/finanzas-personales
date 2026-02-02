@@ -26,12 +26,16 @@ def get_credentials(scopes):
     
     # 2. Intentar obtener desde archivo
     from config import GOOGLE_CREDENTIALS_FILE
-    if os.path.exists(GOOGLE_CREDENTIALS_FILE):
+    abs_path = os.path.abspath(GOOGLE_CREDENTIALS_FILE)
+    logger.info(f"DEBUG: Intentando cargar credenciales desde: {abs_path}")
+    
+    if os.path.exists(abs_path):
         try:
-            logger.info(f"DEBUG: Cargando credenciales desde archivo: {GOOGLE_CREDENTIALS_FILE}")
-            # Leemos el archivo y lo cargamos manualmente para poder limpiar la private_key
-            with open(GOOGLE_CREDENTIALS_FILE, 'r') as f:
-                info = json.load(f)
+            logger.info(f"DEBUG: Archivo encontrado. Cargando...")
+            with open(abs_path, 'r') as f:
+                content = f.read()
+                logger.info(f"DEBUG: Contenido del archivo (primeros 50 caracteres): {content[:50]}...")
+                info = json.loads(content)
             
             if "private_key" in info:
                 # El "Invalid JWT Signature" suele ser por escapes incorrectos
@@ -39,6 +43,8 @@ def get_credentials(scopes):
                 info["private_key"] = info["private_key"].replace("\\n", "\n")
                 if orig_key != info["private_key"]:
                     logger.info("DEBUG: Se corrigieron secuencias \\n en la clave privada.")
+                else:
+                    logger.info("DEBUG: No se detectaron secuencias \\n literales en la clave privada.")
             
             return Credentials.from_service_account_info(info, scopes=scopes)
         except Exception as e:

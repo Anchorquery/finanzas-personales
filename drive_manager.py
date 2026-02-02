@@ -8,6 +8,9 @@ import google_auth
 import io
 from datetime import datetime
 from config import GOOGLE_DRIVE_FOLDER_ID, GOOGLE_CREDENTIALS_FILE
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Scopes necesarios (ya incluidos en sheets_manager, pero explícitos aquí)
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -115,7 +118,7 @@ def upload_receipt(image_bytes: bytes, filename: str, date_str: str = None) -> s
         return file.get('webViewLink')
         
     except Exception as e:
-        print(f"Error al subir a Drive: {e}")
+        logger.error(f"Error al subir a Drive: {e}", exc_info=True)
         return None
 
 def search_file_in_folder(folder_id: str, filename: str, mime_type: str = None) -> str:
@@ -141,7 +144,7 @@ def search_file_in_folder(folder_id: str, filename: str, mime_type: str = None) 
             return files[0]['id']
         return None
     except Exception as e:
-        print(f"Error buscando archivo en Drive: {e}")
+        logger.error(f"Error buscando archivo en Drive: {e}")
         return None
 
 def copy_file(file_id: str, new_name: str, parent_folder_id: str) -> str:
@@ -162,7 +165,7 @@ def copy_file(file_id: str, new_name: str, parent_folder_id: str) -> str:
         ).execute()
         return file.get('id')
     except Exception as e:
-        print(f"Error copiando archivo en Drive: {e}")
+        logger.error(f"Error copiando archivo en Drive: {e}", exc_info=True)
         return None
 
 def create_spreadsheet(name: str, folder_id: str) -> str:
@@ -184,7 +187,7 @@ def create_spreadsheet(name: str, folder_id: str) -> str:
         ).execute()
         return file.get('id')
     except Exception as e:
-        print(f"Error creando Spreadsheet: {e}")
+        logger.error(f"Error creando Spreadsheet: {e}", exc_info=True)
         return None
 
 def list_receipts(year=None, month=None):
@@ -227,5 +230,5 @@ def list_receipts(year=None, month=None):
         return results.get('files', [])
         
     except Exception as e:
-        print(f"Error listando recibos: {e}")
+        logger.error(f"Error listando recibos: {e}", exc_info=True)
         return []

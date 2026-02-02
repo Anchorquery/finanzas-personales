@@ -44,8 +44,37 @@ def verify_system():
         if raw_pk:
             print(f"📊 Diagnóstico PEM: {len(raw_pk)} caracteres, {raw_pk.count(chr(10))} saltos de línea.")
         
+        # 4. Diagnóstico de Visibilidad (Listar todo en la carpeta)
+        print(f"\n📂 Inspeccionando carpeta ID: {GOOGLE_DRIVE_FOLDER_ID}")
+        print(f"   (Buscando qué archivos VE realmente el bot...)")
+        try:
+            drv_service = drive_manager.get_drive_service()
+            results = drv_service.files().list(
+                q=f"'{GOOGLE_DRIVE_FOLDER_ID}' in parents and trashed = false",
+                fields="files(id, name, mimeType, owners)",
+                pageSize=10,
+                includeItemsFromAllDrives=True,
+                supportsAllDrives=True
+            ).execute()
+            files = results.get('files', [])
+            
+            if not files:
+                print("❌ La carpeta está VACÍA para el bot. Confirmar permisos/ID.")
+                print("   Email del bot (para compartir): ", creds.service_account_email)
+            else:
+                print(f"✅ Se encontraron {len(files)} archivos en la carpeta:")
+                for f in files:
+                    owner_emails = [o.get('emailAddress') for o in f.get('owners', [])]
+                    print(f"   📄 '{f['name']}'")
+                    print(f"      ID: {f['id']}")
+                    print(f"      Tipo: {f['mimeType']}")
+                    print(f"      Dueños: {owner_emails}")
+                    
+        except Exception as e:
+            print(f"❌ Error al listar archivos: {e}")
+
         client = sheets_manager.get_client()
-        print("✅ Cliente de Sheets inicializado.")
+        print("\n✅ Cliente de Sheets inicializado.")
         
         # 4. Intentar abrir la hoja del mes
         now = datetime.now()

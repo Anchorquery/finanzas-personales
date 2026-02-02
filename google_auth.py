@@ -5,18 +5,19 @@ from google.oauth2.service_account import Credentials
 
 logger = logging.getLogger(__name__)
 
+import re
+
 def nuclear_clean_pem(pk: str) -> str:
     """
-    Limpia de forma agresiva la clave privada para asegurar un formato PEM válido.
-    Elimina dobles escapes, espacios extra y reconstruye las cabeceras.
+    Limpia de forma agresiva la clave privada asegurando un formato PEM perfecto.
+    Elimina cualquier carácter no perteneciente a base64 en el cuerpo de la clave.
     """
     if not pk:
         return pk
         
-    # 1. Corregir escapes literales comunes (Coolify/Docker issues)
+    # 1. Limpieza inicial de escapes y espacios
     pk_clean = pk.replace("\\\\n", "\n").replace("\\n", "\n")
     
-    # 2. Reconstrucción Nuclear
     try:
         header = "-----BEGIN PRIVATE KEY-----"
         footer = "-----END PRIVATE KEY-----"
@@ -24,12 +25,19 @@ def nuclear_clean_pem(pk: str) -> str:
         if header in pk_clean and footer in pk_clean:
             # Extraer solo el bloque base64 entre cabeceras
             core = pk_clean.split(header)[1].split(footer)[0]
-            # Eliminar ABSOLUTAMENTE TODO espacio en blanco, salto de línea o basura
-            core_clean = "".join(core.split())
-            # Reensamblar con formato estándar perfecto
-            return f"{header}\n{core_clean}\n{footer}\n"
+            
+            # FILTRADO DE SEGURIDAD: Mantener solo caracteres válidos de base64 (y eliminar \r, \n, espacios, etc)
+            # Esto elimina cualquier "basura" o caracteres mal interpretados por el editor de Coolify
+            core_b64 = re.sub(r'[^A-Za-z0-9+/=]', '', core)
+            
+            # Google/cryptography a veces prefiere el formato de 64 caracteres por línea
+            wrapped_core = "\n".join(core_b64[i:i+64] for i in range(0, len(core_b64), 64))
+            
+            cleaned = f"{header}\n{wrapped_core}\n{footer}\n"
+            return cleaned
+            
     except Exception as e:
-        logger.error(f"DEBUG: Error en nuclear_clean_pem: {e}")
+        logger.error(f"DEBUG: Error en re-ensamblado nuclear de PEM: {e}")
         
     return pk_clean
 

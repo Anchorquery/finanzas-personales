@@ -22,6 +22,11 @@ GOOGLE_CREDENTIALS_FILE = os.path.join(BASE_DIR, os.getenv("GOOGLE_CREDENTIALS_F
 # Google Drive
 GOOGLE_DRIVE_FOLDER_ID = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
 
+# Directus
+DIRECTUS_URL = os.getenv("DIRECTUS_URL", "http://localhost:8055")
+DIRECTUS_TOKEN = os.getenv("DIRECTUS_TOKEN", "")
+DIRECTUS_ORG_ID = os.getenv("DIRECTUS_ORG_ID", "")
+
 
 # Categorías de gastos disponibles
 CATEGORIAS = [

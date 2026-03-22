@@ -14,14 +14,15 @@ from telegram.ext import (
     filters
 )
 import drive_manager
-from sheets_manager import get_monthly_spreadsheet # Necesario para reporte
+# from sheets_manager import get_monthly_spreadsheet # Necesario para reporte
 import visualizer
 import io
 import pandas as pd
 
 # Definir estados
 LOGGING_EXPENSE = 1
-import sheets_manager
+# import sheets_manager # LEGACY
+import directus_manager as sheets_manager # NEW ADAPTER
 from gemini_analyzer import analyze_receipt, analyze_text, analyze_voice, format_receipt_message, get_financial_advice
 
 # Configurar logging
@@ -60,7 +61,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Soy una IA diseñada para ayudarte a tomar el control total de tus finanzas familiares directamente desde Telegram.\n\n"
         f"📌 *Estado Actual:*\n"
         f"💵 Tasa activa: *{rate} Bs/$*\n"
-        f"🏛️ Fuente: *{source}* (Actualizada cada 1h)\n\n"
+        f"🏛️ Fuente: *{source}*\n\n"
         f"--- 🛠️ **¿QUÉ PUEDO HACER POR TI?** ---\n\n"
         f"📸 **Registro Inteligente:** Envía una foto de un recibo o pago móvil. Analizaré el monto, banco y concepto automáticamente. _Tip: Añade un comentario a la foto para ayudarme con la categoría._\n\n"
         f"✍️ **Registro por Texto:** Escribe algo como: 'Hoy gasté 500bs en medicina' y lo anotaré.\n\n"
@@ -566,18 +567,21 @@ async def recurring_check_job(context: ContextTypes.DEFAULT_TYPE):
 
 async def reporte_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Generar reporte Excel."""
-    msg = await update.message.reply_text("📊 Generando reporte Excel...")
+    msg = await update.message.reply_text("📊 Generando reporte Excel desde Directus...")
     try:
-        ss = sheets_manager.get_monthly_spreadsheet() 
-        # Traer todo
-        g_recs = ss.worksheet("Gastos").get_all_records()
-        i_recs = ss.worksheet("Ingresos").get_all_records()
+        # ss = sheets_manager.get_monthly_spreadsheet() 
+        # Traer todo desde Directus
+        g_recs = sheets_manager.get_monthly_records(record_type="expense")
+        i_recs = sheets_manager.get_monthly_records(record_type="income")
         
         # Crear Excel en memoria
         wb = pd.ExcelWriter("reporte.xlsx", engine="openpyxl")
         
         if g_recs:
             df_g = pd.DataFrame(g_recs)
+            # Aplanar campos anidados si es necesario (ej: category.name)
+            if 'category' in df_g.columns:
+                 df_g['category'] = df_g['category'].apply(lambda x: x.get('name') if isinstance(x, dict) else x)
             df_g.to_excel(wb, sheet_name="Gastos", index=False)
             
         if i_recs:
@@ -600,13 +604,9 @@ async def consejo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Auditoría financiera con IA sobre últimos gastos."""
     msg = await update.message.reply_text("🕵️ Auditando tus gastos con IA... Espere.")
     try:
-        ss = sheets_manager.get_monthly_spreadsheet()
-        sheet = ss.worksheet("Gastos")
-        # Obtener últimos 30
-        all_vals = sheet.get_all_values()
-        headers = all_vals[0]
-        data = all_vals[1:]
-        last_30 = data[-30:] if len(data) > 30 else data
+        last_30 = sheets_manager.get_monthly_records(record_type="expense")
+        # Directus returns latest first or we sort
+        last_30 = sorted(last_30, key=lambda x: x.get('date', ''), reverse=True)[:30]
         
         if not last_30:
             await msg.edit_text("❌ No hay suficientes gastos para auditar.")
@@ -615,13 +615,9 @@ async def consejo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Formatear para Gemini
         text_data = "Fecha | Concepto | Monto USD | Categoria\n"
         for r in last_30:
-            # Índices: Fecha(0), Monto USD(5), Concepto(12), Categoria(13). Ojo índices varían, usar map simple
-            # O mejor, usar los headers para ser dinámico si get_all_records falló o es lento. 
-            # Usamos índices fijos de sheets_manager:
-            # Gastos: Fecha(0), ..., Monto USD(5), ..., Concepto(12), Categoria(13)
             try:
-                # Comprobación de seguridad de índices
-                row_txt = f"{r[0]} | {r[12] if len(r)>12 else ''} | {r[5] if len(r)>5 else ''} | {r[13] if len(r)>13 else ''}"
+                cat_name = r.get('category', {}).get('name') if isinstance(r.get('category'), dict) else "Otros"
+                row_txt = f"{r.get('date')} | {r.get('concept')} | {r.get('amount')} | {cat_name}"
                 text_data += row_txt + "\n"
             except: continue
             

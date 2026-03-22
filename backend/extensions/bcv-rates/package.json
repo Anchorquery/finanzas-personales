@@ -1,0 +1,12 @@
+{
+  "name": "directus-extension-endpoint-bcv-rates",
+  "version": "1.0.0",
+  "description": "Custom endpoint to scrape BCV rates",
+  "type": "module",
+  "directus:extension": {
+    "type": "endpoint",
+    "path": "index.js",
+    "source": "index.js",
+    "host": "^11.0.0"
+  }
+}

@@ -1,0 +1,51 @@
+services:
+  finanzas_directus:
+    container_name: finanzas_directus
+    image: directus/directus:latest
+    ports:
+      - 8056:8055
+    volumes:
+      - ./uploads:/directus/uploads
+      - ./extensions:/directus/extensions
+    depends_on:
+      - finanzas_db
+      - finanzas_cache
+    environment:
+      KEY: 'key_finanzas_secret_2024'
+      SECRET: 'secret_finanzas_secret_2024'
+      ADMIN_EMAIL: 'admin@finanzas.local'
+      ADMIN_PASSWORD: 'admin'
+      DB_CLIENT: 'pg'
+      DB_HOST: 'finanzas_db'
+      DB_PORT: '5432'
+      DB_DATABASE: 'directus'
+      DB_USER: 'directus'
+      DB_PASSWORD: 'directuspassword'
+      CACHE_ENABLED: 'true'
+      CACHE_STORE: 'redis'
+      CACHE_REDIS: 'redis://finanzas_cache:6379'
+      CACHE_REDIS_HOST: 'finanzas_cache'
+      CACHE_REDIS_PORT: '6379'
+      REDIS: 'redis://finanzas_cache:6379'
+      CORS_ENABLED: 'true'
+      CORS_ORIGIN: '*'
+
+  finanzas_db:
+    container_name: finanzas_db
+    image: postgis/postgis:13-master
+    volumes:
+      - finanzas_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: 'directus'
+      POSTGRES_PASSWORD: 'directuspassword'
+      POSTGRES_DB: 'directus'
+
+  finanzas_cache:
+    container_name: finanzas_cache
+    image: redis:6
+    ports:
+      - 6379:6379
+    command: redis-server --appendonly yes
+
+volumes:
+  finanzas_postgres_data:

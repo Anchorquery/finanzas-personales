@@ -1,0 +1,28 @@
+# Tarea: Migración a Arquitectura Flutter + Directus
+
+- [x] **Fase 0: Arquitectura y Diseño** <!-- id: 20 -->
+    - [x] Definir Stack Tecnológico (Directus + Flutter) <!-- id: 21 -->
+    - [x] Generar Documento de Diseño de Arquitectura <!-- id: 22 -->
+    - [x] Crear Plan de Implementación <!-- id: 23 -->
+- [ ] **Fase 1: Configuración del Entorno** <!-- id: 0 -->
+    - [x] Configurar `docker-compose.yml` para Directus + Postgres <!-- id: 1 -->
+    - [x] Verificar que Directus se esté ejecutando y sea accesible <!-- id: 2 -->
+    - [x] Inicializar proyecto Flutter `app_finanzas` <!-- id: 3 -->
+- [ ] **Fase 2: Implementación del Backend (Directus)** <!-- id: 4 -->
+    - [/] Definir Modelo de Datos (Colecciones) <!-- id: 5 -->
+        - [x] Organizaciones y Miembros <!-- id: 25 -->
+        - [x] Espacios de Trabajo (vinculados a Org) <!-- id: 8 -->
+        - [x] Cuentas (Accounts) <!-- id: 26 -->
+        - [x] Transacciones y Categorías <!-- id: 6 -->
+    - [ ] Configurar Permisos (Nivel Org) <!-- id: 9 -->
+- [ ] **Fase 3: Implementación del Frontend (Flutter)** <!-- id: 10 -->
+    - [ ] Configurar Patrón GetX (GetMaterialApp, Rutas, Bindings) <!-- id: 11 -->
+    - [ ] Implementar Servicio Directus (GetxService + GraphQL) <!-- id: 12 -->
+    - [ ] Crear Módulos (Vista/Controlador/Binding) <!-- id: 13 -->
+        - [ ] Módulo Dashboard <!-- id: 14 -->
+        - [ ] Módulo Transacciones <!-- id: 15 -->
+        - [ ] Módulo Espacios de Trabajo (Cambio/Creación) <!-- id: 24 -->
+        - [ ] Binding de Conexión (Cliente GraphQL) <!-- id: 16 -->
+- [ ] **Fase 4: Integración del Bot** <!-- id: 17 -->
+    - [ ] Crear Capa de Adaptación (Python -> API Directus) <!-- id: 18 -->
+    - [ ] Migrar lógica de `sheets_manager.py` para usar Directus <!-- id: 19 -->

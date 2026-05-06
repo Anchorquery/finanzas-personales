@@ -82,6 +82,9 @@ class FakeSavingsDetailController extends GetxController
 
   @override
   double get totalSaved => 250;
+
+  @override
+  String get currency => 'USD';
 }
 
 void main() {

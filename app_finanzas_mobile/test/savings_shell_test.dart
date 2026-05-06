@@ -82,6 +82,9 @@ class FakeSavingsController extends GetxController
   @override
   double get totalSaved =>
       savings.fold(0, (sum, item) => sum + item.currentAmount);
+
+  @override
+  String get currency => 'USD';
 }
 
 void main() {

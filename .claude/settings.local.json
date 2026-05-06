@@ -1,7 +1,44 @@
 {
   "permissions": {
     "allow": [
-      "mcp__mcp-registry__search_mcp_registry"
+      "mcp__mcp-registry__search_mcp_registry",
+      "Bash(flutter analyze:*)",
+      "WebFetch(domain:firebase.google.com)",
+      "WebFetch(domain:pub.dev)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:langchaindart.dev)",
+      "Bash(flutter pub:*)",
+      "Bash(flutter test:*)",
+      "Bash(dart analyze:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -r \"getCategoryPredictions\\\\|predictCategory\\\\|categorizeTransaction\\\\|analyzeSpending\\\\|gemini\\\\|predictive\" /c/Users/Pruebas/Desktop/apps/telegram-bots/finanzas-personales/app_finanzas_mobile/lib --include=*.dart)",
+      "Bash(for file:*)",
+      "Bash(do)",
+      "Bash(if grep:*)",
+      "Bash(then)",
+      "Bash(if ! grep -q \"\\\\.dispose\\(\\)\" \"$file\")",
+      "Bash(grep -l \"createTransaction\\\\|createDebt\\\\|createEvent\\\\|createBudget\\\\|addSubscription\\\\|createSavingGoal\" /c/Users/Pruebas/Desktop/apps/telegram-bots/finanzas-personales/app_finanzas_mobile/lib/modules/*/controllers/*.dart)",
+      "Bash(while read:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/Pruebas/Desktop/apps/telegram-bots/finanzas-personales/app_finanzas_mobile/**)",
+      "Bash(done)",
+      "Bash(grep -r \"\\\\.dispose\\(\\)\" /c/Users/Pruebas/Desktop/apps/telegram-bots/finanzas-personales/app_finanzas_mobile/lib/modules/*/controllers/*.dart)",
+      "Bash(grep -r \"onClose\\(\\)\" /c/Users/Pruebas/Desktop/apps/telegram-bots/finanzas-personales/app_finanzas_mobile/lib/modules/*/controllers/*.dart)",
+      "mcp__ide__getDiagnostics",
+      "Bash(grep -v '^$')",
+      "Bash(ipconfig)",
+      "Bash(grep -v \"dialog\\\\|Dialog\\\\|bottomSheet\\\\|modal\\\\|Modal\\\\|showModal\\\\|ElevatedButton\\\\|TextButton\\\\|OutlinedButton\\\\|showDialog\\\\|backgroundColor: Colors.transparent,  //\")",
+      "Bash(sed -n '25,35p' \"C:\\\\Users\\\\Pruebas\\\\Desktop\\\\apps\\\\telegram-bots\\\\finanzas-personales\\\\app_finanzas_mobile\\\\lib\\\\modules\\\\profile\\\\views\\\\profile_view.dart\")",
+      "Bash(sed -n '14,25p' \"C:\\\\Users\\\\Pruebas\\\\Desktop\\\\apps\\\\telegram-bots\\\\finanzas-personales\\\\app_finanzas_mobile\\\\lib\\\\modules\\\\organizations\\\\views\\\\organizations_list_view.dart\")",
+      "Bash(sed -n '22,32p' \"C:\\\\Users\\\\Pruebas\\\\Desktop\\\\apps\\\\telegram-bots\\\\finanzas-personales\\\\app_finanzas_mobile\\\\lib\\\\modules\\\\security\\\\views\\\\security_view.dart\")",
+      "Bash(sed -n '85,95p' \"C:\\\\Users\\\\Pruebas\\\\Desktop\\\\apps\\\\telegram-bots\\\\finanzas-personales\\\\app_finanzas_mobile\\\\lib\\\\modules\\\\savings\\\\views\\\\savings_detail_view.dart\")",
+      "Bash(sed -n '1,40p' \"C:\\\\Users\\\\Pruebas\\\\Desktop\\\\apps\\\\telegram-bots\\\\finanzas-personales\\\\app_finanzas_mobile\\\\lib\\\\modules\\\\profile\\\\views\\\\profile_view.dart\")",
+      "Bash(sed -n '12,22p' \"C:\\\\Users\\\\Pruebas\\\\Desktop\\\\apps\\\\telegram-bots\\\\finanzas-personales\\\\app_finanzas_mobile\\\\lib\\\\modules\\\\organizations\\\\views\\\\organizations_list_view.dart\")",
+      "Bash(sed -n '215,235p' lib/modules/events/views/events_view.dart)",
+      "Bash(sed -n '10,30p' lib/modules/expenses/views/transaction_items_view.dart)",
+      "Bash(sed -n '20,40p' lib/modules/expenses/views/transaction_item_evolution_view.dart)",
+      "Bash(sed -n '80,100p' lib/modules/savings/views/savings_detail_view.dart)",
+      "Bash(sed -n '18,35p' lib/modules/security/views/security_view.dart)"
     ]
   }
 }

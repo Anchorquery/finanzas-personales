@@ -1,2 +1,0 @@
-# Forzar uso del Dockerfile existente deshabilitando providers
-providers = []

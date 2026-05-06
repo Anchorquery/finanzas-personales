@@ -1,0 +1,12 @@
+{
+  "name": "directus-extension-hook-workspaces-access",
+  "version": "1.0.0",
+  "description": "Hook config for workspaces",
+  "type": "module",
+  "directus:extension": {
+    "type": "hook",
+    "path": "index.js",
+    "source": "index.js",
+    "host": "^11.0.0"
+  }
+}

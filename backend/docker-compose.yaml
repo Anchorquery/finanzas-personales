@@ -1,0 +1,61 @@
+services:
+  finanzas_directus:
+    container_name: finanzas_directus
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8055}:8055"
+    volumes:
+      - directus_uploads:/directus/uploads
+      # extensions and migrations are already in the image, but we can mount them for dev if needed
+      # - ./extensions:/directus/extensions
+      # - ./migrations:/directus/migrations
+    depends_on:
+      finanzas_db:
+        condition: service_healthy
+      finanzas_cache:
+        condition: service_started
+    environment:
+      KEY: "${KEY:-key_finanzas_secret_2024}"
+      SECRET: "${SECRET:-secret_finanzas_secret_2024}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@finanzas.local}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin}"
+      DB_CLIENT: "pg"
+      DB_HOST: "finanzas_db"
+      DB_PORT: "5432"
+      DB_DATABASE: "${DB_DATABASE:-directus}"
+      DB_USER: "${DB_USER:-directus}"
+      DB_PASSWORD: "${DB_PASSWORD:-directuspassword}"
+      CACHE_ENABLED: "true"
+      CACHE_STORE: "redis"
+      CACHE_REDIS: "redis://finanzas_cache:6379"
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: "*"
+    restart: always
+
+  finanzas_db:
+    container_name: finanzas_db
+    image: postgis/postgis:13-master
+    volumes:
+      - finanzas_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: "${DB_USER:-directus}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-directuspassword}"
+      POSTGRES_DB: "${DB_DATABASE:-directus}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-directus} -d ${DB_DATABASE:-directus}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  finanzas_cache:
+    container_name: finanzas_cache
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+    restart: always
+
+volumes:
+  finanzas_postgres_data:
+  directus_uploads:

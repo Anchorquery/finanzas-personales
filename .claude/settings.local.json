@@ -38,7 +38,10 @@
       "Bash(sed -n '10,30p' lib/modules/expenses/views/transaction_items_view.dart)",
       "Bash(sed -n '20,40p' lib/modules/expenses/views/transaction_item_evolution_view.dart)",
       "Bash(sed -n '80,100p' lib/modules/savings/views/savings_detail_view.dart)",
-      "Bash(sed -n '18,35p' lib/modules/security/views/security_view.dart)"
+      "Bash(sed -n '18,35p' lib/modules/security/views/security_view.dart)",
+      "Bash(Get-ChildItem -Recurse -Filter \"*.dart\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Read(//tmp/**)"
     ]
   }
 }

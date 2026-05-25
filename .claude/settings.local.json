@@ -41,7 +41,21 @@
       "Bash(sed -n '18,35p' lib/modules/security/views/security_view.dart)",
       "Bash(Get-ChildItem -Recurse -Filter \"*.dart\")",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(flutter gen-l10n *)",
+      "Bash(git stash *)",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\Pruebas\\\\Desktop\\\\apps\\\\telegram-bots\\\\finanzas-personales\\\\app_finanzas_mobile\\\\lib\\\\modules\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Pruebas\\\\Desktop\\\\apps\\\\telegram-bots\\\\finanzas-personales\\\\app_finanzas_mobile\\\\lib\\\\modules\" -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(openssl rand *)",
+      "WebFetch(domain:directus.io)",
+      "Bash(git push *)",
+      "WebFetch(domain:www.bcv.org.ve)",
+      "Bash(docker compose *)",
+      "Bash(docker info *)",
+      "Bash(docker pull *)",
+      "Bash(docker context *)"
     ]
   }
 }

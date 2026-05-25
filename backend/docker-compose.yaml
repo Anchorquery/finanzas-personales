@@ -8,30 +8,39 @@ services:
       - "${PORT:-8055}:8055"
     volumes:
       - directus_uploads:/directus/uploads
-      # extensions and migrations are already in the image, but we can mount them for dev if needed
-      # - ./extensions:/directus/extensions
-      # - ./migrations:/directus/migrations
+      - ./extensions:/directus/extensions
+      - ./migrations:/directus/migrations
     depends_on:
       finanzas_db:
         condition: service_healthy
       finanzas_cache:
         condition: service_started
     environment:
-      KEY: "${KEY:-key_finanzas_secret_2024}"
-      SECRET: "${SECRET:-secret_finanzas_secret_2024}"
+      # WARNING: KEY/SECRET defaults below are placeholders. Override via .env in production.
+      KEY: "${KEY:?KEY must be set}"
+      SECRET: "${SECRET:?SECRET must be set}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@finanzas.local}"
-      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}"
       DB_CLIENT: "pg"
       DB_HOST: "finanzas_db"
       DB_PORT: "5432"
       DB_DATABASE: "${DB_DATABASE:-directus}"
       DB_USER: "${DB_USER:-directus}"
-      DB_PASSWORD: "${DB_PASSWORD:-directuspassword}"
+      DB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD must be set}"
       CACHE_ENABLED: "true"
       CACHE_STORE: "redis"
       CACHE_REDIS: "redis://finanzas_cache:6379"
       CORS_ENABLED: "true"
-      CORS_ORIGIN: "*"
+      # Restrict to known frontend origins in production. Comma-separated list.
+      CORS_ORIGIN: "${CORS_ORIGIN:-http://localhost:3000,http://localhost:8080}"
+      PUBLIC_URL: "${PUBLIC_URL:-http://localhost:8055}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8055/server/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     restart: always
 
   finanzas_db:
@@ -41,7 +50,7 @@ services:
       - finanzas_postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: "${DB_USER:-directus}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD:-directuspassword}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD must be set}"
       POSTGRES_DB: "${DB_DATABASE:-directus}"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-directus} -d ${DB_DATABASE:-directus}"]
@@ -54,8 +63,16 @@ services:
     container_name: finanzas_cache
     image: redis:6-alpine
     command: redis-server --appendonly yes
+    volumes:
+      - finanzas_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     restart: always
 
 volumes:
   finanzas_postgres_data:
+  finanzas_redis_data:
   directus_uploads:

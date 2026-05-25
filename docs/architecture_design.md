@@ -88,42 +88,39 @@ Usaremos Directus para gestionar las siguientes tablas de PostgreSQL.
 
 Usaremos **GetX** para la Gestión de Estado, Enrutamiento e Inyección de Dependencias. Esto proporciona un enfoque más simple y con menos código repetitivo (boilerplate).
 
-#### **Estructura de Carpetas (Patrón GetX)**
+#### **Estructura de Carpetas (real)**
 
 ```
 lib/
-├── main.dart                  # Punto de entrada, GetMaterialApp
-├── config/
-│   ├── theme.dart             # Tema de UI
-│   ├── routes/
-│   │   ├── app_pages.dart     # Definiciones de GetPage
-│   │   └── app_routes.dart    # Constantes de nombres de rutas
-│   └── constants.dart         # URLs de API
-├── core/
-│   ├── api/                   # Cliente GraphQL (graphql_flutter)
-│   └── utils/                 # Helpers / Utilidades
-├── modules/                   # Organizado por funcionalidad (Vista + Controlador + Binding)
+├── main.dart                  # Entrada, GetMaterialApp, inicialización servicios
+├── core/                      # Config, tema, utils, widgets compartidos
+│   ├── config/
+│   ├── theme/                 # AppTheme (light/dark)
+│   ├── utils/                 # CurrencyUtils, helpers
+│   └── widgets/
+├── routes/
+│   ├── app_pages.dart         # GetPage definitions
+│   └── app_routes.dart        # Constantes nombres rutas
+├── data/
+│   ├── models/                # DTOs + dominio
+│   ├── providers/             # GraphQL providers
+│   └── services/              # DirectusService, AuthService, ExchangeRateService, NotificationService
+├── modules/                   # Vista + Controlador + Binding por feature
 │   ├── auth/
-│   │   ├── auth_binding.dart
-│   │   ├── auth_controller.dart
-│   │   └── auth_view.dart
 │   ├── dashboard/
-│   │   ├── dashboard_binding.dart
-│   │   ├── dashboard_controller.dart
-│   │   └── dashboard_view.dart
 │   ├── transactions/
-│   │   ├── transaction_binding.dart
-│   │   ├── transaction_controller.dart
-│   │   └── transaction_view.dart
-│   └── workspaces/
-│       ├── workspace_binding.dart
-│       ├── workspace_controller.dart
-│       └── workspace_switcher_view.dart
-├── data/                      # Repositorios/Servicios Globales
-│   ├── models/                
-│   ├── providers/             # Proveedores GraphQL
-│   └── services/              # Servicio Directus (GraphQL)
-└── global_widgets/            # Widgets reutilizables
+│   ├── workspaces/
+│   ├── ai_coach/              # Agente IA con tools + HITL
+│   │   ├── agent/agent_tools.dart
+│   │   ├── controllers/ai_coach_controller.dart
+│   │   └── views/ai_coach_view.dart
+│   ├── scan_receipt/          # OCR Gemini
+│   ├── accounts/  budgets/  debts/  events/  expenses/
+│   ├── home/  incomes/  invitations/  organizations/  profile/
+│   ├── recurring/  savings/  security/  settings/  setup/
+│   ├── stats/  subscriptions/
+├── utils/
+└── widgets/                   # Widgets reutilizables globales
 ```
 
 ### Librerías Clave

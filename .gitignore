@@ -179,3 +179,50 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# ─── Flutter / Dart ──────────────────────────────────────────────
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/build/
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/pubspec_overrides.yaml
+**/generated_plugin_registrant.dart
+**/.fvm/
+app_finanzas_mobile/ios/Pods/
+app_finanzas_mobile/ios/.symlinks/
+app_finanzas_mobile/ios/Flutter/Flutter.framework
+app_finanzas_mobile/ios/Flutter/Flutter.podspec
+app_finanzas_mobile/android/.gradle/
+app_finanzas_mobile/android/captures/
+app_finanzas_mobile/android/local.properties
+app_finanzas_mobile/android/key.properties
+app_finanzas_mobile/android/**/gradle-wrapper.jar
+app_finanzas_mobile/android/app/release/
+app_finanzas_mobile/web/build/
+app_finanzas_mobile/tmp/
+
+# ─── JVM crash dumps ─────────────────────────────────────────────
+hs_err_pid*.log
+hs_err_pid*.mdmp
+replay_pid*.log
+
+# ─── IDE / OS ────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# ─── Backend (Directus) ──────────────────────────────────────────
+backend/uploads/
+backend/data/
+*.env.local
+
+# ─── Misc ────────────────────────────────────────────────────────
+*.log
+!CHANGELOG.md

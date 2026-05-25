@@ -5,6 +5,7 @@ import 'package:app_finanzas_mobile/modules/savings/views/savings_detail_view.da
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class FakeSavingsDetailController extends GetxController
     implements SavingsController {
@@ -88,6 +89,11 @@ class FakeSavingsDetailController extends GetxController
 }
 
 void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('es_ES', null);
+    await initializeDateFormatting('es', null);
+  });
+
   tearDown(() {
     Get.reset();
   });

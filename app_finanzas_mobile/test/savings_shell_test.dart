@@ -1,11 +1,13 @@
 import 'package:app_finanzas_mobile/data/models/finance/saving.dart';
 import 'package:app_finanzas_mobile/data/models/finance/transaction.dart';
+import 'package:app_finanzas_mobile/l10n/gen/app_localizations.dart';
 import 'package:app_finanzas_mobile/modules/home/views/home_view.dart';
 import 'package:app_finanzas_mobile/modules/savings/controllers/savings_controller.dart';
 import 'package:app_finanzas_mobile/modules/savings/views/savings_view.dart';
 import 'package:app_finanzas_mobile/routes/app_pages.dart';
 import 'package:app_finanzas_mobile/routes/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
@@ -103,10 +105,24 @@ void main() {
   testWidgets('la vista de ahorros puede abrir el drawer del shell', (
     tester,
   ) async {
+    // Menu icon only renders when viewport width < 800 (mobile breakpoint).
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     Get.put<SavingsController>(FakeSavingsController());
 
     await tester.pumpWidget(
       GetMaterialApp(
+        localizationsDelegates: const [
+          AppL10n.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppL10n.supportedLocales,
+        locale: const Locale('es'),
         home: Scaffold(
           drawer: const Drawer(child: Text('drawer abierto')),
           body: const SavingsView(),

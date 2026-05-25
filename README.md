@@ -1,96 +1,137 @@
-# 💰 Finanzas Personales - Ecosistema de Gestión Financiera Inteligente
+# 💰 Finanzas Personales — Ecosistema de Gestión Financiera Inteligente
 
-![Banner](banner.png)
+![Banner](docs/assets/banner.png)
 
-**Finanzas Personales** es una solución integral diseñada para tomar el control total de tu vida financiera. A diferencia de las aplicaciones tradicionales, este ecosistema combina la potencia de un backend robusto y auto-hospedado con una aplicación móvil modular y moderna, integrando Inteligencia Artificial para ofrecer una experiencia de gestión financiera de nivel premium.
-
----
-
-## 🌟 Características Principales
-
-### 📱 Experiencia Móvil Modular
-- **Gestión Multi-Perfil**: Soporte para organizaciones y espacios de trabajo compartidos.
-- **Control de Gastos e Ingresos**: Registro detallado con categorías personalizables y soporte multi-moneda (USD, VES, EUR).
-- **Escaneo de Recibos**: Procesa tus facturas automáticamente mediante OCR (en desarrollo).
-- **Suscripciones y Recurrentes**: Nunca olvides un pago; gestiona tus servicios de streaming y facturas mensuales.
-- **Seguimiento de Deudas**: Mantén un registro claro de lo que debes y lo que te deben.
-
-### 🤖 Inteligencia Artificial (AI Coach)
-- **Análisis Predictivo**: Basado en Google Gemini, la app analiza tus hábitos de gasto y te ofrece consejos personalizados para ahorrar.
-- **Asistente Financiero**: Consulta dudas sobre tu salud financiera en lenguaje natural.
-
-### 🛡️ Backend Empresarial (Self-Hosted)
-- **Privacidad Total**: Tus datos te pertenecen. El backend corre sobre **Directus**, dándote control total sobre tu base de datos.
-- **Arquitectura Escalable**: Desplegado mediante Docker para una portabilidad sin esfuerzo.
-- **API First**: Integración sencilla con otros servicios mediante REST API.
+**Finanzas Personales** es una solución integral para gestionar tu vida financiera. Combina un backend self-hosted (Directus) con una app móvil modular (Flutter + GetX) e integra Google Gemini para análisis con IA.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🌟 Características
+
+### 📱 App móvil
+- **Multi-perfil**: organizaciones y workspaces compartidos
+- **Transacciones**: ingresos/gastos con categorías personalizables, multi-moneda (USD, VES, EUR)
+- **OCR de recibos**: captura y analiza facturas con Gemini 2.5 Flash
+- **Suscripciones y recurrentes**: gestiona pagos repetitivos
+- **Deudas**: lo que debes y lo que te deben
+- **Ahorros y presupuestos**
+- **Conversión multi-moneda**: tasas BCV (Venezuela), Binance y paralelo
+
+### 🤖 AI Coach
+- Análisis de hábitos basado en Google Gemini
+- Asistente conversacional con tool calling y human-in-the-loop
+- Plan de pasos visible (write_todos pattern)
+
+### 🛡️ Backend
+- **Directus CMS** sobre PostgreSQL + Redis
+- **Privacidad**: self-hosted, tus datos te pertenecen
+- **Docker Compose**: portabilidad y despliegue trivial
+- **API**: REST y GraphQL
+- **Extensions custom**: BCV rates, scheduler, workspaces access control
+
+---
+
+## 🛠️ Stack
 
 | Componente | Tecnología |
-| :--- | :--- |
-| **Frontend** | [Flutter](https://flutter.dev/) (GetX Architecture) |
-| **Backend** | [Directus CMS](https://directus.io/) (Node.js) |
-| **Base de Datos** | PostgreSQL / SQLite |
-| **AI Engine** | [Google Gemini AI](https://deepmind.google/technologies/gemini/) |
-| **Infraestructura** | Docker & Docker Compose |
-| **Scripting** | PowerShell / Python (Migración) |
+|---|---|
+| Frontend | [Flutter](https://flutter.dev/) (GetX) |
+| Backend | [Directus](https://directus.io/) (Node.js) |
+| DB | PostgreSQL 13 (postgis) |
+| Caché | Redis 6 |
+| AI | [Google Gemini](https://deepmind.google/technologies/gemini/) via `langchain_google` |
+| Infra | Docker Compose |
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📁 Estructura
 
-```bash
-├── app_finanzas_mobile/   # Aplicación móvil (Flutter)
-├── backend/               # Configuración de Directus, Docker y Migraciones
-├── docs/                  # Documentación técnica y guías de usuario
-├── create_fields.ps1      # Script de automatización para el setup de Directus
-└── .env                   # Variables de entorno y configuración sensible
+```
+.
+├── app_finanzas_mobile/   # App Flutter (GetX architecture)
+├── backend/               # Directus + Postgres + Redis (Docker)
+│   ├── docker-compose.yaml
+│   ├── extensions/        # bcv-rates, bcv-scheduler, workspaces-access
+│   └── migrations/        # SQL migrations
+├── docs/                  # Documentación técnica
+├── .github/workflows/     # CI (analyze, test, docker build)
+├── LICENSE
+└── README.md
 ```
 
 ---
 
-## 🚀 Guía de Inicio Rápido
+## 🚀 Inicio rápido
 
-### 1. Configuración del Backend
-Navega a la carpeta del backend e inicia los servicios:
+### Backend
+
 ```powershell
 cd backend
-docker-compose up -d
+cp .env.example .env
+# Edita .env: KEY/SECRET (openssl rand -hex 32), passwords, CORS_ORIGIN
+docker compose up -d
+# Admin UI → http://localhost:8055/admin
 ```
 
-### 2. Preparar el Schema
-Ejecuta el script de automatización para configurar los campos necesarios en Directus:
+Más detalle: [backend/README.md](backend/README.md).
+
+### App móvil
+
 ```powershell
-./create_fields.ps1
-```
-
-### 3. Ejecutar la App Móvil
-Asegúrate de tener Flutter instalado y configurado:
-```bash
 cd app_finanzas_mobile
 flutter pub get
 flutter run
 ```
 
+Configura la URL del backend en la pantalla de setup inicial. La API key de Gemini se guarda dentro de los settings de la organización en Directus (no en el cliente).
+
+---
+
+## 🧪 Testing
+
+```powershell
+cd app_finanzas_mobile
+flutter analyze
+flutter test
+```
+
+Backend:
+
+```powershell
+cd backend
+docker compose config --quiet
+```
+
+CI corre estos comandos en cada PR — ver [.github/workflows/ci.yml](.github/workflows/ci.yml).
+
 ---
 
 ## 📊 Roadmap
 
-- [x] Gestión básica de transacciones.
-- [x] Integración con Directus.
-- [x] Soporte Multi-moneda.
-- [ ] Implementación completa de OCR para recibos.
-- [ ] Dashboard avanzado de visualización de datos.
-- [ ] Sincronización en la nube cifrada de extremo a extremo.
+- [x] Gestión transacciones
+- [x] Integración Directus
+- [x] Multi-moneda con tasas BCV/Binance/paralelo
+- [x] OCR recibos (Gemini 2.5 Flash)
+- [x] AI Coach con tool calling
+- [x] Workspaces compartidos
+- [ ] Dashboard avanzado con más visualizaciones
+- [ ] Sincronización cifrada extremo-a-extremo
+- [ ] Internacionalización completa (.arb files, EN/ES)
+- [ ] Crash reporting (Sentry)
+- [ ] Backup automatizado backend
+
+---
+
+## 🤝 Contribuir
+
+Ver [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
 ## 🛡️ Licencia
 
-Este proyecto está bajo la licencia MIT. Consulta el archivo `LICENSE` para más detalles (próximamente).
+MIT — ver [LICENSE](LICENSE).
 
 ---
 
-Desarrollado con ❤️ para todos los que buscan libertad financiera.
+Desarrollado con ❤️ para quienes buscan libertad financiera.

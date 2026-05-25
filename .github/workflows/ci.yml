@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  flutter:
+    name: Flutter analyze + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app_finanzas_mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      - name: flutter analyze
+        run: flutter analyze
+
+      - name: flutter test
+        run: flutter test --reporter expanded
+
+  backend:
+    name: Backend docker build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Lint compose
+        run: docker compose -f docker-compose.yaml config --quiet
+        env:
+          KEY: ci_key
+          SECRET: ci_secret
+          ADMIN_PASSWORD: ci_admin
+          DB_PASSWORD: ci_db
+
+      - name: Build Directus image
+        run: docker build -t finanzas-directus:ci .

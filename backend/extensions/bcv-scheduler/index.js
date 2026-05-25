@@ -1,12 +1,13 @@
 import https from 'node:https';
 
-// Fetch que ignora errores de certificado SSL (BCV tiene cert mal configurado)
 function fetchInsecure(url) {
 	return new Promise((resolve, reject) => {
 		const req = https.get(url, {
 			rejectUnauthorized: false,
 			headers: {
-				'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+				'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+				'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+				'Accept-Language': 'es-VE,es;q=0.9',
 			}
 		}, (res) => {
 			let data = '';
@@ -14,26 +15,42 @@ function fetchInsecure(url) {
 			res.on('end', () => resolve({ status: res.statusCode, body: data }));
 		});
 		req.on('error', reject);
-		req.setTimeout(15000, () => { req.destroy(); reject(new Error('Timeout')); });
+		req.setTimeout(20000, () => { req.destroy(); reject(new Error('Timeout')); });
 	});
 }
 
-// Scrape tasas del BCV
 function scrapeRates(html) {
 	const parseRate = (id) => {
-		const regex = new RegExp(
-			`id="${id}"[\\s\\S]*?<strong>\\s*([\\d.,]+)\\s*</strong>`,
-			'i'
-		);
-		const match = html.match(regex);
-		if (match && match[1]) {
-			// BCV usa punto como separador de miles y coma como decimal
-			const cleaned = match[1].replaceAll('.', '').replace(',', '.');
-			const rate = parseFloat(cleaned);
-			console.log(`[BCV-Scheduler] Parseado ${id}: raw="${match[1]}" → cleaned="${cleaned}" → ${rate}`);
-			return rate;
+		// Patrón 1: id="dolar" ... <strong>36,5000</strong>
+		const p1 = new RegExp(`id="${id}"[\\s\\S]{0,500}?<strong>\\s*([\\d.,]+)\\s*</strong>`, 'i');
+		// Patrón 2: id="dolar" ... <span class="...">36,5000</span>
+		const p2 = new RegExp(`id="${id}"[\\s\\S]{0,500}?<span[^>]*>\\s*([\\d]+[.,][\\d.,]+)\\s*</span>`, 'i');
+		// Patrón 3: data-field="dolar" ... número
+		const p3 = new RegExp(`data-[a-z]+="${id}"[\\s\\S]{0,300}?([\\d]+[,\\.][\\d]+)`, 'i');
+		// Patrón 4: texto "Dólar" seguido de número con formato venezolano
+		const p4 = id === 'dolar'
+			? /[Dd]ól(?:ar)?[^<]{0,200}([0-9]{1,3}(?:\.[0-9]{3})*,[0-9]+)/
+			: /[Ee]uro[^<]{0,200}([0-9]{1,3}(?:\.[0-9]{3})*,[0-9]+)/;
+
+		for (const [i, pattern] of [[1, p1], [2, p2], [3, p3], [4, p4]]) {
+			const match = html.match(pattern);
+			if (match?.[1]) {
+				const cleaned = match[1].replaceAll('.', '').replace(',', '.');
+				const rate = parseFloat(cleaned);
+				if (!isNaN(rate) && rate > 0) {
+					console.log(`[BCV-Scheduler] Patrón ${i} → ${id}: raw="${match[1]}" rate=${rate}`);
+					return rate;
+				}
+			}
 		}
-		console.warn(`[BCV-Scheduler] No se encontró tasa para id="${id}"`);
+
+		// Debug: mostrar contexto alrededor de "dolar"/"euro" en el HTML
+		const ctxMatch = html.match(new RegExp(`.{0,200}${id}.{0,200}`, 'i'));
+		if (ctxMatch) {
+			console.warn(`[BCV-Scheduler] No extraído "${id}". Contexto HTML:`, ctxMatch[0].replace(/\s+/g, ' '));
+		} else {
+			console.warn(`[BCV-Scheduler] Palabra "${id}" no encontrada en HTML`);
+		}
 		return null;
 	};
 
@@ -58,51 +75,37 @@ async function ensureTable(database) {
 			});
 			console.log('[BCV-Scheduler] Tabla exchange_rates creada');
 		} else {
-			// Migración: agregar columna provider si no existe
 			const hasProvider = await database.schema.hasColumn('exchange_rates', 'provider');
 			if (!hasProvider) {
 				await database.schema.alterTable('exchange_rates', (table) => {
 					table.string('provider', 20).notNullable().defaultTo('bcv');
 				});
-				console.log('[BCV-Scheduler] Columna provider agregada a exchange_rates');
-
-				try {
-					await database.schema.alterTable('exchange_rates', (table) => {
-						table.dropUnique(['currency', 'rate_date']);
-					});
-				} catch (_) { /* Constraint puede no existir */ }
-				try {
-					await database.schema.alterTable('exchange_rates', (table) => {
-						table.unique(['currency', 'rate_date', 'provider']);
-					});
-				} catch (_) { /* Constraint puede ya existir */ }
+				try { await database.schema.alterTable('exchange_rates', (t) => t.dropUnique(['currency', 'rate_date'])); } catch (_) {}
+				try { await database.schema.alterTable('exchange_rates', (t) => t.unique(['currency', 'rate_date', 'provider'])); } catch (_) {}
+				console.log('[BCV-Scheduler] Columna provider migrada');
 			}
 		}
 	} catch (error) {
-		console.error('[BCV-Scheduler] Error en ensureTable:', error.message);
+		console.error('[BCV-Scheduler] Error ensureTable:', error.message);
 		throw error;
 	}
 }
 
 async function refreshBCVRates(database) {
-	console.log('[BCV-Scheduler] Iniciando refresh de tasas BCV...');
-
+	console.log('[BCV-Scheduler] Iniciando refresh...');
 	await ensureTable(database);
 
-	console.log('[BCV-Scheduler] Fetching https://www.bcv.org.ve/ ...');
 	const result = await fetchInsecure('https://www.bcv.org.ve/');
-
-	if (result.status !== 200) {
-		throw new Error(`BCV respondió con status: ${result.status}`);
-	}
-
+	if (result.status !== 200) throw new Error(`BCV status: ${result.status}`);
 	console.log(`[BCV-Scheduler] HTML recibido: ${result.body.length} bytes`);
 
 	const rates = scrapeRates(result.body);
 
 	if (!rates.usd && !rates.eur) {
-		console.error('[BCV-Scheduler] No se encontraron tasas en el HTML. Primeros 500 chars:', result.body.substring(0, 500));
-		throw new Error('No se pudieron extraer las tasas del HTML del BCV');
+		// Guardar fragmento HTML para debug manual
+		console.error('[BCV-Scheduler] Tasas no encontradas. Primeros 2000 chars del HTML:');
+		console.error(result.body.substring(0, 2000).replace(/\s+/g, ' '));
+		throw new Error('No se pudieron extraer tasas del BCV');
 	}
 
 	const today = new Date().toISOString().split('T')[0];
@@ -110,22 +113,14 @@ async function refreshBCVRates(database) {
 
 	for (const [currency, rate] of [['USD', rates.usd], ['EUR', rates.eur]]) {
 		if (rate == null) continue;
-
 		try {
-			// Intentar upsert
-			const existing = await database('exchange_rates')
-				.where({ currency, rate_date: today, provider: 'bcv' })
-				.first();
-
+			const existing = await database('exchange_rates').where({ currency, rate_date: today, provider: 'bcv' }).first();
 			if (existing) {
-				await database('exchange_rates')
-					.where({ id: existing.id })
-					.update({ rate, created_at: database.fn.now() });
-				console.log(`[BCV-Scheduler] Actualizado ${currency}=${rate} (${today})`);
+				await database('exchange_rates').where({ id: existing.id }).update({ rate, created_at: database.fn.now() });
+				console.log(`[BCV-Scheduler] Actualizado ${currency}=${rate}`);
 			} else {
-				await database('exchange_rates')
-					.insert({ currency, rate, rate_date: today, provider: 'bcv', created_at: database.fn.now() });
-				console.log(`[BCV-Scheduler] Insertado ${currency}=${rate} (${today})`);
+				await database('exchange_rates').insert({ currency, rate, rate_date: today, provider: 'bcv', created_at: database.fn.now() });
+				console.log(`[BCV-Scheduler] Insertado ${currency}=${rate}`);
 			}
 			saved[currency.toLowerCase()] = rate;
 		} catch (err) {
@@ -133,28 +128,26 @@ async function refreshBCVRates(database) {
 		}
 	}
 
-	console.log(`[BCV-Scheduler] Refresh completado: USD=${saved.usd ?? 'N/A'}, EUR=${saved.eur ?? 'N/A'} (${today})`);
+	console.log(`[BCV-Scheduler] Completado: USD=${saved.usd ?? 'N/A'}, EUR=${saved.eur ?? 'N/A'} (${today})`);
 	return saved;
 }
 
 export default ({ schedule }, { database }) => {
-	// Ejecutar cada 6 horas
 	schedule('0 */6 * * *', async () => {
 		try {
-			console.log('[BCV-Scheduler] === CRON DISPARADO ===');
+			console.log('[BCV-Scheduler] === CRON ===');
 			await refreshBCVRates(database);
 		} catch (error) {
-			console.error('[BCV-Scheduler] Error en refresh programado:', error.message);
+			console.error('[BCV-Scheduler] Error cron:', error.message);
 		}
 	});
 
-	// Ejecutar al iniciar el servidor
 	setTimeout(async () => {
 		try {
-			console.log('[BCV-Scheduler] === REFRESH INICIAL AL ARRANCAR ===');
+			console.log('[BCV-Scheduler] === ARRANQUE ===');
 			await refreshBCVRates(database);
 		} catch (error) {
-			console.error('[BCV-Scheduler] Error en refresh inicial:', error.message);
+			console.error('[BCV-Scheduler] Error arranque:', error.message);
 		}
-	}, 5000);
+	}, 8000);
 };

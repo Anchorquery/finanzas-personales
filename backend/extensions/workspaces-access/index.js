@@ -1,6 +1,14 @@
-export default ({ filter, action }, { services, exceptions }) => {
+export default ({ filter }, { services }) => {
 	const { ItemsService } = services;
-	const { InvalidPayloadException } = exceptions;
+
+	// v11: exceptions removed from context — use custom error class
+	class InvalidPayloadException extends Error {
+		constructor(message) {
+			super(message);
+			this.status = 400;
+			this.code = 'INVALID_PAYLOAD';
+		}
+	}
 
 	filter('workspaces.items.create', async (payload, meta, context) => {
 		return await validateWorkspaceMembers(payload, meta, context, false);
@@ -23,7 +31,6 @@ export default ({ filter, action }, { services, exceptions }) => {
 			}
 		}
 
-		// "limpiar ids duplicados"
 		memberIds = [...new Set(memberIds)];
 
 		let orgId = payload.organization;
@@ -32,31 +39,23 @@ export default ({ filter, action }, { services, exceptions }) => {
 		if (isUpdate && meta.keys?.length > 0) {
 			const workspacesService = new ItemsService('workspaces', {
 				schema: context.schema,
-				accountability: context.accountability, // use context accountability which corresponds to the request auth context
+				accountability: context.accountability,
 			});
-            
-            // Allow system override without full context tracking if necessary, 
-            // but the request is authenticated anyway
 			const workspace = await workspacesService.readOne(meta.keys[0], { fields: ['organization', 'user'] });
 			if (!orgId) orgId = workspace?.organization;
 			if (!ownerId) ownerId = workspace?.user;
 		}
 
-		// "impedir quitar acceso al owner"
-        // Si el owner estaba implícitamente protegido por ser "user", el access_member_ids no define a owner.
-        // Pero si nos lo piden, vamos a asegurar que si ownerId tiene un valor, y es una operación sobre restricted, 
-        // tal vez requiera estar añadido siempre:
-        if (ownerId && !memberIds.includes(ownerId)) {
-            memberIds.push(ownerId);
-        }
+		if (ownerId && !memberIds.includes(ownerId)) {
+			memberIds.push(ownerId);
+		}
 
-        // "impedir guardar access_member_ids con usuarios que no pertenecen a la organización del workspace"
 		if (orgId && memberIds.length > 0) {
 			const membersService = new ItemsService('organization_members', {
 				schema: context.schema,
 				accountability: context.accountability,
 			});
-            
+
 			const validMembers = await membersService.readByQuery({
 				filter: {
 					organization: { _eq: orgId },
@@ -64,18 +63,18 @@ export default ({ filter, action }, { services, exceptions }) => {
 				},
 				limit: -1,
 			});
-            
+
 			const validUserIds = validMembers.map((m) => m.user);
 			const invalidIds = memberIds.filter((id) => !validUserIds.includes(id));
-            
+
 			if (invalidIds.length > 0) {
 				throw new InvalidPayloadException(
 					`Members array contains users that are not in the organization: ${invalidIds.join(', ')}`
 				);
 			}
 		}
-        
-        payload.access_member_ids = memberIds;
+
+		payload.access_member_ids = memberIds;
 		return payload;
 	}
 };

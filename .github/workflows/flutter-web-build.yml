@@ -1,0 +1,77 @@
+name: Build Flutter Web & Push to web-dist
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app_finanzas_mobile/**'
+      - '.github/workflows/flutter-web-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app_finanzas_mobile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install deps
+        run: flutter pub get
+
+      - name: Build web
+        env:
+          DIRECTUS_URL: ${{ secrets.DIRECTUS_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          flutter build web --release \
+            --base-href "/" \
+            --dart-define=DIRECTUS_URL=$DIRECTUS_URL \
+            --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY \
+            --tree-shake-icons \
+            --no-source-maps
+
+      - name: Prepare dist (copy nginx + Dockerfile)
+        run: |
+          mkdir -p dist
+          cp -r build/web/* dist/
+          cp web/nginx.conf dist/nginx.conf
+          cat > dist/Dockerfile <<'EOF'
+          FROM nginx:alpine
+          COPY . /usr/share/nginx/html
+          RUN mv /usr/share/nginx/html/nginx.conf /etc/nginx/conf.d/default.conf && \
+              rm -f /usr/share/nginx/html/Dockerfile
+          EXPOSE 80
+          HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- http://localhost/healthz || exit 1
+          EOF
+
+      - name: Deploy to web-dist branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./app_finanzas_mobile/dist
+          publish_branch: web-dist
+          force_orphan: true
+          commit_message: "build: web ${{ github.sha }}"
+
+      - name: Trigger Coolify deploy
+        if: ${{ secrets.COOLIFY_WEBHOOK_URL != '' }}
+        run: |
+          curl -fsSL -X POST \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}" \
+            "${{ secrets.COOLIFY_WEBHOOK_URL }}"

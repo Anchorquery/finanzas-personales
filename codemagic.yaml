@@ -22,6 +22,7 @@ workflows:
       - name: Build Android APK
         script: |
           flutter build apk --release \
+            --no-tree-shake-icons \
             --dart-define=DIRECTUS_URL=$DIRECTUS_URL
 
     artifacts:
@@ -54,6 +55,7 @@ workflows:
       - name: Build Android App Bundle
         script: |
           flutter build appbundle --release \
+            --no-tree-shake-icons \
             --dart-define=DIRECTUS_URL=$DIRECTUS_URL
 
     artifacts:

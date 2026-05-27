@@ -76,5 +76,6 @@ services:
 
 volumes:
   finanzas_postgres_data_v2:
+    name: finanzas_postgres_data_v2
   finanzas_redis_data:
   directus_uploads:

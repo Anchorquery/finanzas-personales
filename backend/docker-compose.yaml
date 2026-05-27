@@ -45,9 +45,11 @@ services:
 
   finanzas_db:
     container_name: finanzas_db
-    image: postgis/postgis:13-master
+    build:
+      context: .
+      dockerfile: Dockerfile.db
     volumes:
-      - finanzas_postgres_data:/var/lib/postgresql/data
+      - finanzas_postgres_data_v2:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: "${DB_USER:-directus}"
       POSTGRES_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD must be set}"
@@ -73,6 +75,6 @@ services:
     restart: always
 
 volumes:
-  finanzas_postgres_data:
+  finanzas_postgres_data_v2:
   finanzas_redis_data:
   directus_uploads:

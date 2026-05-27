@@ -1,0 +1,3 @@
+FROM postgis/postgis:13-master
+
+COPY dump_finanzas.sql /docker-entrypoint-initdb.d/01_restore.sql

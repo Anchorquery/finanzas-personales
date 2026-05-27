@@ -2,17 +2,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
 
 void main() {
-  test('Backend BCV Scraping Endpoint', () async {
-    // Assuming backend is running on localhost (mapped port 8056)
-    // Note: 'localhost' works if running test from host machine targeting host backend
-    const apiUrl = 'http://localhost:8056/bcv-rates';
+  const apiUrl = String.fromEnvironment(
+    'DIRECTUS_URL',
+    defaultValue: 'https://bs943xvxnxhhus0pnhe404kb.213.130.147.89.sslip.io',
+  );
 
-    debugPrint('Testing Endpoint: $apiUrl');
+  test('Backend BCV Scraping Endpoint', () async {
+    final endpoint = '$apiUrl/bcv-rates';
+    debugPrint('Testing Endpoint: $endpoint');
 
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http
+          .get(Uri.parse(endpoint))
+          .timeout(const Duration(seconds: 10));
 
       debugPrint('Status Code: ${response.statusCode}');
       debugPrint('Body: ${response.body}');
@@ -27,10 +32,11 @@ void main() {
       } else {
         debugPrint('❌ Failed: Server responded with error.');
       }
+    } on SocketException catch (e) {
+      debugPrint('⚠️ Skipped: Backend not reachable in this environment. $e');
+      // No falla CI — test de integración opcional
     } catch (e) {
-      debugPrint(
-        '❌ Failed: Could not connect to backend. Is Docker running? Error: $e',
-      );
+      debugPrint('⚠️ Skipped: $e');
     }
   });
 }

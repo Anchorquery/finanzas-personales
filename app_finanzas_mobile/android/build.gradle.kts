@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 allprojects {
     repositories {
         google()
@@ -17,6 +20,18 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+// Raise Kotlin language/api floor to 1.8: some plugins (e.g. sentry_flutter) pin 1.6, which Kotlin Gradle Plugin 2.x rejects.
+subprojects {
+    afterEvaluate {
+        tasks.withType<KotlinCompile>().configureEach {
+            compilerOptions {
+                languageVersion.set(KotlinVersion.KOTLIN_1_8)
+                apiVersion.set(KotlinVersion.KOTLIN_1_8)
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

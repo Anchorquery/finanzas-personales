@@ -1,0 +1,72 @@
+workflows:
+  android-release:
+    name: Android Release
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      # Variables de entorno a configurar en Codemagic UI:
+      # DIRECTUS_URL  → https://bs943xvxnxhhus0pnhe404kb.213.130.147.89.sslip.io
+      # CM_KEYSTORE   → base64 del .jks (cuando tengas keystore)
+      # CM_KEY_ALIAS
+      # CM_KEY_PASSWORD
+      # CM_KEYSTORE_PASSWORD
+      vars:
+        DIRECTUS_URL: $DIRECTUS_URL
+
+    working_directory: app_finanzas_mobile
+
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+
+      - name: Build Android APK
+        script: |
+          flutter build apk --release \
+            --dart-define=DIRECTUS_URL=$DIRECTUS_URL
+
+    artifacts:
+      - app_finanzas_mobile/build/app/outputs/flutter-apk/app-release.apk
+
+    publishing:
+      email:
+        recipients:
+          - jdherrera952@gmail.com
+        notify:
+          success: true
+          failure: true
+
+  android-release-aab:
+    name: Android Release (AAB - Play Store)
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      android_signing:
+        - finanzas_keystore   # nombre del keystore en Codemagic UI
+      vars:
+        DIRECTUS_URL: $DIRECTUS_URL
+
+    working_directory: app_finanzas_mobile
+
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+
+      - name: Build Android App Bundle
+        script: |
+          flutter build appbundle --release \
+            --dart-define=DIRECTUS_URL=$DIRECTUS_URL
+
+    artifacts:
+      - app_finanzas_mobile/build/app/outputs/bundle/release/app-release.aab
+
+    publishing:
+      email:
+        recipients:
+          - jdherrera952@gmail.com
+        notify:
+          success: true
+          failure: true
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true

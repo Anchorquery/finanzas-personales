@@ -1,0 +1,31 @@
+abstract class Routes {
+  static const login = '/login';
+  static const setup = '/setup';
+  static const home = '/';
+  static const dashboard = '/dashboard';
+  static const transactions = '/transactions';
+  static const workspaces = '/workspaces';
+  static const events = '/events';
+  static const createEvent = '/events/create';
+  static const settings = '/settings';
+  static const subscriptions = '/subscriptions';
+  static const aiCoach = '/ai-coach';
+  static const orgSettings = '/settings/organization';
+  static const budgets = '/budgets';
+  static const savings = '/savings';
+  static const debts = '/debts';
+  static const createWorkspace = '/workspaces/create';
+  static const workspaceSettings = '/workspaces/settings';
+  static const createTransaction = '/transactions/create';
+  static const scanReceipt = '/scan-receipt';
+  static const incomes = '/incomes';
+  static const addIncome = '/incomes/add';
+  static const createSavingGoal = '/savings/create';
+  static const expenses = '/expenses';
+  static const register = '/register';
+  static const invitations = '/invitations';
+  static const organizations = '/organizations';
+  static const organizationDetails = '/organization-details';
+  static const security = '/security';
+  static const recurring = '/recurring';
+}

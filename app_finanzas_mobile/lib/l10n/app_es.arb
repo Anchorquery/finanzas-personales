@@ -1,0 +1,260 @@
+{
+  "@@locale": "es",
+
+  "appTitle": "Finanzas Personales",
+  "@appTitle": {"description": "App title"},
+
+  "aiCoachTitle": "Coach Financiero",
+  "aiCoachSubtitle": "Asistente con IA",
+
+  "aiCoachWelcome": "¡Hola! Soy tu **Coach Financiero** 💡\n\nTengo acceso a tus datos y puedo analizar gastos, optimizar presupuestos, planificar el pago de deudas, registrar movimientos y abrir vistas por ti. ¿En qué te ayudo hoy?",
+  "aiCoachReadyTitle": "Coach Financiero\nlisto para ayudarte",
+  "aiCoachConnectGemini": "Conecta tu API key de Google Gemini para activar el asistente. Gratis y en 1 minuto.",
+
+  "aiCoachInsightsHeader": "🔎 **Lo que detecté en tus datos:**",
+  "aiCoachInsightBudgetsExceeded": "Tienes presupuestos **excedidos** este mes. Pregunta cuáles.",
+  "aiCoachInsightBudgetsAtRisk": "Hay presupuestos **en riesgo** (≥80% gastado).",
+  "aiCoachInsightDebtsActive": "Tienes **deudas activas**. ¿Quieres un plan de pago?",
+  "aiCoachInsightSaveRateNegative": "Estás **gastando más de lo que ingresas** este mes ({rate}%).",
+  "@aiCoachInsightSaveRateNegative": {
+    "placeholders": {"rate": {"type": "String"}}
+  },
+  "aiCoachInsightSaveRateLow": "Tu tasa de ahorro es baja ({rate}%). Meta saludable: ≥20%.",
+  "@aiCoachInsightSaveRateLow": {
+    "placeholders": {"rate": {"type": "String"}}
+  },
+
+  "aiCoachErrorApiKey": "🔑 **API key inválida**. Ve a Ajustes > Configuración AI.",
+  "aiCoachErrorQuota": "⏳ **Cuota agotada**. Espera unos minutos e intenta de nuevo.",
+  "aiCoachErrorSafety": "🛡️ Respuesta bloqueada por filtros de seguridad. Reformula tu pregunta.",
+  "aiCoachErrorTimeout": "⏱️ La respuesta tardó demasiado. Verifica tu conexión e intenta de nuevo.",
+  "aiCoachErrorGeneric": "❌ Error al obtener respuesta. Intenta de nuevo.",
+  "aiCoachErrorMaxIterations": "⚠️ Alcancé el límite de pasos del análisis. Intenta con una pregunta más específica.",
+  "aiCoachErrorNoApi": "⚠️ No tengo configurada la API de Gemini.\nVe a **Ajustes > Configuración AI** para agregar tu API key.",
+
+  "aiCoachContextRefreshed": "✅ Contexto actualizado con los datos más recientes.",
+  "aiCoachNoWorkspace": "No hay workspace activo.",
+
+  "commonOk": "OK",
+  "commonCancel": "Cancelar",
+  "commonApprove": "Aprobar",
+  "commonReject": "Rechazar",
+  "commonRetry": "Reintentar",
+  "commonSave": "Guardar",
+  "commonDelete": "Eliminar",
+  "commonEdit": "Editar",
+  "commonAdd": "Agregar",
+  "commonClose": "Cerrar",
+  "commonRequired": "Requerido",
+  "commonLoading": "Cargando…",
+  "commonContinue": "Continuar",
+  "commonBack": "Atrás",
+  "commonError": "Error",
+  "commonSuccess": "Éxito",
+
+  "errorRequired": "Campo requerido",
+  "errorInvalidEmail": "Correo inválido",
+  "errorAmountInvalid": "Monto inválido",
+  "errorAmountPositive": "Debe ser mayor que cero",
+  "errorPasswordShort": "Contraseña muy corta",
+
+  "debtsTitle": "Mis Deudas",
+  "debtsEmpty": "No hay deudas registradas.",
+  "debtsAddNew": "Nueva Deuda",
+  "debtsTotalAmount": "Monto Total",
+  "debtsInterest": "Interés (%)",
+  "debtsDueDate": "Fecha de vencimiento",
+  "debtsRegister": "REGISTRAR DEUDA",
+  "debtsNameLabel": "Nombre de la deuda",
+  "debtsGeneralInfo": "Información General",
+
+  "savingsTitle": "Mis Ahorros",
+  "savingsActiveGoals": "METAS ACTIVAS",
+  "savingsGoalsCount": "{count} Metas",
+  "@savingsGoalsCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "savingsCreateGoal": "Crear meta",
+  "savingsGoalName": "Nombre de la meta",
+  "savingsTargetAmount": "Monto objetivo",
+  "savingsTargetDate": "Fecha objetivo",
+  "savingsTotalSaved": "Total ahorrado",
+  "savingsAddFunds": "Aportar",
+  "savingsWithdrawFunds": "Retirar",
+
+  "budgetsTitle": "Mis Presupuestos",
+  "budgetsEmptyTitle": "Control total de tus finanzas",
+  "budgetsEmptyBody": "Define límites mensuales por categoría para evitar gastos innecesarios y alcanzar tus metas de ahorro más rápido.",
+  "budgetsCreate": "Crear presupuesto",
+  "budgetsLimit": "Límite",
+  "budgetsCategory": "Categoría",
+
+  "subscriptionsTitle": "Suscripciones",
+  "subscriptionsEmpty": "No se encontraron suscripciones.\nAgrega una manualmente.",
+  "subscriptionsAdd": "Agregar Suscripción",
+  "subscriptionsCancelled": "Cancelada",
+  "subscriptionsName": "Nombre",
+  "subscriptionsAmount": "Monto Mensual",
+  "subscriptionsDay": "Día de cobro (1-31)",
+  "subscriptionsRegisterPayment": "Registrar pago",
+
+  "recurringTitle": "Pagos Recurrentes",
+  "recurringEmpty": "No hay suscripciones activas.",
+  "recurringManage": "Gestionar suscripciones",
+  "recurringDueIn": "Vence en {days} días (Día {day})",
+  "@recurringDueIn": {
+    "placeholders": {
+      "days": {"type": "int"},
+      "day": {"type": "int"}
+    }
+  },
+  "recurringConfirmPay": "Confirmar Pago",
+  "recurringPayPrompt": "¿Registrar pago de {name} por ${amount}?",
+  "@recurringPayPrompt": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+
+  "transactionsTitle": "Transacciones",
+  "transactionsEmpty": "Sin transacciones en este período",
+  "transactionsAdd": "Nueva transacción",
+  "transactionsConcept": "Concepto",
+  "transactionsAmount": "Monto",
+  "transactionsCategory": "Categoría",
+  "transactionsDate": "Fecha",
+  "transactionsTypeIncome": "Ingreso",
+  "transactionsTypeExpense": "Gasto",
+
+  "incomesTitle": "Mis Ingresos",
+  "incomesEmpty": "No hay ingresos registrados.",
+  "incomesAdd": "Agregar ingreso",
+  "incomesSource": "Fuente",
+  "incomesAmount": "Monto",
+  "incomesPlanned": "Planificados",
+  "incomesActual": "Recibidos",
+
+  "expensesTitle": "Mis Gastos",
+  "expensesEmpty": "No hay gastos registrados.",
+  "expensesAdd": "Nuevo gasto",
+
+  "eventsTitle": "Eventos",
+  "eventsEmpty": "No hay eventos programados.",
+  "eventsAdd": "Nuevo evento",
+
+  "accountsTitle": "Cuentas",
+  "accountsEmpty": "No hay cuentas.",
+  "accountsBalance": "Saldo",
+  "accountsCreate": "Crear cuenta",
+
+  "scanReceiptTitle": "Escanear recibo",
+  "scanReceiptUpload": "Subir archivo",
+  "scanReceiptCapture": "Tomar foto",
+  "scanReceiptGallery": "Galería",
+  "scanReceiptProcessing": "Procesando…",
+  "scanReceiptAnalyzed": "Analizado",
+  "scanReceiptFailed": "Falló",
+  "scanReceiptRecentUploads": "Subidas recientes",
+
+  "homeTabDashboard": "Dashboard",
+  "homeTabTransactions": "Transacciones",
+  "homeTabSettings": "Ajustes",
+  "homeTabCoach": "Coach",
+
+  "statsTitle": "Estadísticas",
+  "statsEmpty": "Sin datos para mostrar",
+  "statsByCategory": "Por categoría",
+  "statsTrend": "Tendencia",
+
+  "createEventTitle": "Nuevo Evento / Viaje",
+  "createEventName": "Nombre del Evento",
+  "createEventDescription": "Descripción",
+  "createEventBudget": "Presupuesto",
+  "createEventStart": "Fecha inicio",
+  "createEventEnd": "Fecha fin",
+  "createEventSubmit": "Crear Evento",
+
+  "addIncomeTitle": "Registrar Ingreso",
+  "addExpenseTitle": "Nuevo Gasto",
+  "createSavingTitle": "Nueva Meta de Ahorro",
+  "createWorkspaceTitle": "Crear Espacio",
+  "aiSettingsTitle": "Configuración AI",
+  "membersTitle": "Miembros",
+  "accountDetailTitle": "Detalle de Cuenta",
+  "currencySettingsTitle": "Moneda y Conversión",
+
+  "loginEmailHint": "tu@correo.com",
+  "loginPasswordHint": "Mínimo 8 caracteres",
+  "registerNameHint": "Tu nombre",
+
+  "transactionItemsTitle": "Artículos",
+  "transactionItemsEmpty": "No hay artículos",
+  "transactionItemEvolutionTitle": "Evolución de precio",
+
+  "organizationsTitle": "Organizaciones",
+  "organizationsEmpty": "No tienes organizaciones todavía",
+  "organizationsNew": "Nueva Organización",
+  "organizationsCreate": "Crear Nueva Organización",
+  "organizationsNameLabel": "Nombre de la organización",
+  "organizationsInviteRevoke": "Revocar invitación",
+  "organizationsConfirmRevoke": "¿Revocar la invitación a {email}?",
+  "@organizationsConfirmRevoke": {
+    "placeholders": {"email": {"type": "String"}}
+  },
+  "organizationsInviteMember": "Invitar miembro",
+  "organizationsRole": "Rol",
+
+  "workspacesTitle": "Espacios",
+  "workspaceEditTitle": "Editar Espacio",
+  "workspaceNameLabel": "Nombre del espacio",
+  "workspaceCreate": "Crear espacio",
+  "workspaceDelete": "Eliminar Espacio",
+  "workspaceDeleteWarning": "Esta acción no se puede deshacer. Se perderán todos los datos financieros y configuraciones de IA asociadas.",
+  "workspaceCurrency": "Moneda",
+
+  "settingsTitle": "Ajustes",
+  "settingsAccount": "Cuenta",
+  "settingsPreferences": "Preferencias",
+  "settingsLanguage": "Idioma",
+  "settingsTheme": "Tema",
+  "settingsAi": "Configuración AI",
+  "settingsSecurity": "Seguridad",
+  "settingsLogout": "Cerrar sesión",
+
+  "profileTitle": "Perfil",
+  "profileEdit": "Editar perfil",
+
+  "securityTitle": "Seguridad",
+  "securityPin": "PIN",
+  "securityBiometric": "Biometría",
+
+  "setupTitle": "Configuración inicial",
+  "setupWelcome": "Bienvenido",
+  "setupCreateFirst": "Crea tu primer espacio para empezar",
+
+  "authLoginTitle": "Iniciar sesión",
+  "authLoginEmail": "Correo electrónico",
+  "authLoginPassword": "Contraseña",
+  "authLoginButton": "INGRESAR",
+  "authLoginForgot": "¿Olvidaste tu contraseña?",
+  "authLoginNoAccount": "¿No tienes cuenta?",
+  "authLoginRegister": "Regístrate",
+
+  "authRegisterTitle": "Crear cuenta",
+  "authRegisterName": "Nombre",
+  "authRegisterButton": "REGISTRARSE",
+  "authRegisterHaveAccount": "¿Ya tienes cuenta?",
+  "authRegisterLogin": "Inicia sesión",
+
+  "authForgotTitle": "Recuperar Contraseña",
+  "authForgotHint": "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+  "authForgotButton": "ENVIAR ENLACE",
+  "authForgotSuccess": "Correo Enviado",
+  "authForgotSuccessBody": "Revisa tu bandeja de entrada para restablecer tu contraseña.",
+  "authForgotError": "No se pudo enviar el correo. Verifica que el email sea correcto.",
+  "authForgotInvalidEmail": "Correo electrónico inválido",
+
+  "invitationsTitle": "Invitaciones",
+  "invitationsEmpty": "No tienes invitaciones pendientes."
+}

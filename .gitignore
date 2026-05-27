@@ -16,6 +16,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+!app_finanzas_mobile/lib/
+!app_finanzas_mobile/lib/**
 parts/
 sdist/
 var/

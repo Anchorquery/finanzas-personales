@@ -27,9 +27,10 @@ services:
       DB_DATABASE: "${DB_DATABASE:-directus}"
       DB_USER: "${DB_USER:-directus}"
       DB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD must be set}"
-      CACHE_ENABLED: "true"
+      CACHE_ENABLED: "${CACHE_ENABLED:-true}"
       CACHE_STORE: "redis"
       CACHE_REDIS: "redis://finanzas_cache:6379"
+      REDIS: "redis://finanzas_cache:6379"
       CORS_ENABLED: "true"
       # Restrict to known frontend origins in production. Comma-separated list.
       CORS_ORIGIN: "${CORS_ORIGIN:-http://localhost:3000,http://localhost:8080}"

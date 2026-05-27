@@ -55,7 +55,16 @@
       "Bash(docker compose *)",
       "Bash(docker info *)",
       "Bash(docker pull *)",
-      "Bash(docker context *)"
+      "Bash(docker context *)",
+      "Bash(grep -rEh \"collection: ['\\\\\"]?[a-z_]+|'[a-z_]+',? *//.*collection|getItems\\\\\\(|createItem\\\\\\(|updateItem\\\\\\(\" app_finanzas_mobile/lib --include=\"*.dart\")",
+      "Bash(grep -rEh \"'/items/[a-z_]+|\\\\\"\\\\\\\\/items\\\\\\\\/[a-z_]+|/items/\\\\\\\\\\\\$\" app_finanzas_mobile/lib --include=\"*.dart\" -o)",
+      "Bash(Start-Sleep -Seconds 20)",
+      "Bash(curl -s http://localhost:8056/server/health)",
+      "Bash(docker exec *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(docker network *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(k\\) for k in d.keys\\(\\)]\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(v['Name']\\) for v in d.values\\(\\)]\")"
     ]
   }
 }

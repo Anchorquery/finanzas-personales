@@ -14,7 +14,7 @@ RUN flutter build web --release \
     --base-href "${FLUTTER_BASE_HREF}" \
     --dart-define=DIRECTUS_URL=${DIRECTUS_URL} \
     --dart-define=GEMINI_API_KEY=${GEMINI_API_KEY} \
-    --tree-shake-icons \
+    --no-tree-shake-icons \
     --no-source-maps
 
 FROM nginx:alpine

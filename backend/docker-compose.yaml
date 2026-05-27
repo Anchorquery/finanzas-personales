@@ -8,40 +8,39 @@ services:
       - "${PORT:-8055}:8055"
     volumes:
       - directus_uploads:/directus/uploads
-      - ./extensions:/directus/extensions
-      - ./migrations:/directus/migrations
     depends_on:
       finanzas_db:
         condition: service_healthy
       finanzas_cache:
         condition: service_started
     environment:
-      # WARNING: KEY/SECRET defaults below are placeholders. Override via .env in production.
       KEY: "${KEY:?KEY must be set}"
       SECRET: "${SECRET:?SECRET must be set}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@finanzas.local}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}"
       DB_CLIENT: "pg"
-      DB_HOST: "finanzas_db"
-      DB_PORT: "5432"
+      DB_HOST: "${DB_HOST:-finanzas_db}"
+      DB_PORT: "${DB_PORT:-5432}"
       DB_DATABASE: "${DB_DATABASE:-directus}"
       DB_USER: "${DB_USER:-directus}"
       DB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD must be set}"
       CACHE_ENABLED: "${CACHE_ENABLED:-true}"
       CACHE_STORE: "redis"
-      CACHE_REDIS: "redis://finanzas_cache:6379"
-      REDIS: "redis://finanzas_cache:6379"
+      CACHE_REDIS: "${REDIS:-redis://finanzas_cache:6379}"
+      REDIS: "${REDIS:-redis://finanzas_cache:6379}"
+      CACHE_NAMESPACE: "${CACHE_NAMESPACE:-directus-cache}"
+      CACHE_TTL: "${CACHE_TTL:-5m}"
+      CACHE_AUTO_PURGE: "${CACHE_AUTO_PURGE:-true}"
       CORS_ENABLED: "true"
-      # Restrict to known frontend origins in production. Comma-separated list.
-      CORS_ORIGIN: "${CORS_ORIGIN:-http://localhost:3000,http://localhost:8080}"
+      CORS_ORIGIN: "${CORS_ORIGIN:-*}"
       PUBLIC_URL: "${PUBLIC_URL:-http://localhost:8055}"
       LOG_LEVEL: "${LOG_LEVEL:-info}"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8055/server/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8055/server/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 40s
+      start_period: 60s
     restart: always
 
   finanzas_db:

@@ -85,6 +85,7 @@ void main() async {
       options.environment = AppConfig.sentryEnvironment;
       options.tracesSampleRate = 0.2;
       options.attachScreenshot = false;
+      // ignore: experimental_member_use
       options.attachViewHierarchy = false;
     },
     appRunner: _bootstrap,

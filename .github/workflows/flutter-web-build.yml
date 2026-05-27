@@ -44,6 +44,7 @@ jobs:
             --dart-define=DIRECTUS_URL=$DIRECTUS_URL \
             --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY \
             --no-tree-shake-icons \
+            --no-wasm-dry-run \
             --no-source-maps
 
       - name: Prepare dist (copy nginx + Dockerfile)

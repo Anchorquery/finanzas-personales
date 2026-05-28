@@ -18,8 +18,9 @@ RUN flutter build web --release \
     --no-source-maps
 
 FROM nginx:alpine
+RUN apk add --no-cache wget curl
 COPY --from=build /app/build/web /usr/share/nginx/html
 COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
-  CMD wget -qO- http://localhost/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:80/healthz || exit 1

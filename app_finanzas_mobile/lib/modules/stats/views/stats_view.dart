@@ -172,7 +172,7 @@ class StatsView extends StatelessWidget {
                             child: _summaryCard(
                               'Ingresos',
                               controller.totalIncomeThisMonth.value,
-                              const Color(0xFF10B981),
+                              AppTheme.accentGreen,
                               cardColor,
                             ),
                           ),
@@ -181,7 +181,7 @@ class StatsView extends StatelessWidget {
                             child: _summaryCard(
                               'Gastos',
                               controller.totalExpenseThisMonth.value,
-                              const Color(0xFFF43F5E),
+                              AppTheme.accentRed,
                               cardColor,
                             ),
                           ),
@@ -345,9 +345,9 @@ class StatsView extends StatelessWidget {
   static Color _categoryColor(int index) {
     const colors = [
       Color(0xFF3B82F6),
-      Color(0xFF10B981),
+      AppTheme.accentGreen,
       Color(0xFFF59E0B),
-      Color(0xFFF43F5E),
+      AppTheme.accentRed,
       Color(0xFF8B5CF6),
       Color(0xFF06B6D4),
       Color(0xFFEC4899),
@@ -417,13 +417,13 @@ class StatsView extends StatelessWidget {
             barRods: [
               BarChartRodData(
                 toY: (item['income'] as double),
-                color: const Color(0xFF10B981),
+                color: AppTheme.accentGreen,
                 width: 8,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
               ),
               BarChartRodData(
                 toY: (item['expense'] as double),
-                color: const Color(0xFFF43F5E),
+                color: AppTheme.accentRed,
                 width: 8,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
               ),

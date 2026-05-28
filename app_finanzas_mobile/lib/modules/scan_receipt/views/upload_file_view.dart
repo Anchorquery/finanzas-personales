@@ -189,7 +189,7 @@ class UploadFileView extends GetView<ScanReceiptController> {
                           boxShadow: [
                             BoxShadow(
                               color: const Color(
-                                0xFF2B4BEE,
+                                0xFF7C3AED,
                               ).withValues(alpha: 0.1),
                               blurRadius: 20,
                               spreadRadius: 5,

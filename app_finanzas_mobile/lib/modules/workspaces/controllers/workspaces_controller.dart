@@ -19,7 +19,7 @@ class WorkspacesController extends GetxController {
   // Form logic variables
   final RxString newWorkspaceName = ''.obs;
   final RxInt selectedIconCode = Icons.home.codePoint.obs;
-  final RxInt selectedColorValue = const Color(0xFF2B4BEE).toARGB32().obs;
+  final RxInt selectedColorValue = const Color(0xFF7C3AED).toARGB32().obs;
   final RxBool isShared = false.obs;
 
   List<Workspace> get workspaces => _workspaces;
@@ -113,7 +113,7 @@ class WorkspacesController extends GetxController {
       Get.snackbar(
         'Espacio Cambiado',
         'Ahora estás en: ${workspace.name}',
-        backgroundColor: const Color(0xFF10B981),
+        backgroundColor: const Color(0xFF059669),
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
         margin: const EdgeInsets.all(16),

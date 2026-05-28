@@ -107,7 +107,7 @@ class _HomeViewState extends State<HomeView> {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                const maxW = 960.0;
+                const maxW = 1280.0;
                 final hPad = constraints.maxWidth > maxW
                     ? (constraints.maxWidth - maxW) / 2.0
                     : 0.0;

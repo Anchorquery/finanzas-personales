@@ -1165,10 +1165,11 @@ class _WeeklyFlow extends StatelessWidget {
                 height: 140,
                 child: Obx(() {
                   final spots = controller.weeklySpots.toList();
-                  if (spots.isEmpty) {
+                  final hasMovement = spots.any((s) => s.y.abs() > 0);
+                  if (spots.isEmpty || !hasMovement) {
                     return const Center(
                       child: Text(
-                        'Sin datos esta semana',
+                        'Sin movimientos esta semana',
                         style: TextStyle(
                           color: DashboardView._slate400,
                           fontSize: 12,
@@ -1556,6 +1557,7 @@ class _WideTopBar extends StatelessWidget {
               child: const TextField(
                 style: TextStyle(fontSize: 14),
                 decoration: InputDecoration(
+                  filled: false,
                   icon: Icon(
                     Icons.search_rounded,
                     color: Color(0xFF4A4455),
@@ -2049,7 +2051,7 @@ class _WideGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
-      final stack = constraints.maxWidth < 1024;
+      final stack = constraints.maxWidth < 800;
       if (stack) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2185,10 +2187,11 @@ class _WideWeeklyFlow extends StatelessWidget {
             height: 200,
             child: Obx(() {
               final spots = controller.weeklySpots.toList();
-              if (spots.isEmpty) {
+              final hasMovement = spots.any((s) => s.y.abs() > 0);
+              if (spots.isEmpty || !hasMovement) {
                 return const Center(
                   child: Text(
-                    'Sin datos esta semana',
+                    'Sin movimientos esta semana',
                     style: TextStyle(color: Color(0xFF7B7487)),
                   ),
                 );

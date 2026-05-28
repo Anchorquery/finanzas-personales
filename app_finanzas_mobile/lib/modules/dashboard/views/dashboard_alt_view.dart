@@ -605,7 +605,7 @@ class DashboardAltView extends GetView<DashboardController> {
             isDark: isDark,
             icon: Icons.add,
             label: 'Nuevo\nGasto',
-            color: const Color(0xFF10B981),
+            color: const Color(0xFF059669),
             onTap: () {
               Get.toNamed(Routes.transactions);
             },

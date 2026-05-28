@@ -14,8 +14,8 @@ import '../controllers/ai_coach_controller.dart';
 // ─── Palette ──────────────────────────────────────────────────────────────────
 
 class _C {
-  static const userBubbleStart = Color(0xFF3B5BFF);
-  static const userBubbleEnd = Color(0xFF2B4BEE);
+  static const userBubbleStart = Color(0xFF9B5CFF);
+  static const userBubbleEnd = Color(0xFF7C3AED);
   static const aiBubbleColor = Color(0xFF192236);
   static const aiBubbleBorder = Color(0x14FFFFFF);
   static const aiAvatarStart = Color(0xFF8B5CF6);

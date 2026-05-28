@@ -3,12 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // ── Core Brand ──────────────────────────────────────────────────────────
-  static const Color primary      = Color(0xFF2B4BEE);
+  static const Color primary      = Color(0xFF7C3AED); // Violeta fintech
   static const Color primaryColor = primary; // compat
 
   // ── Semantic Status ─────────────────────────────────────────────────────
-  static const Color accentGreen   = Color(0xFF10B981); // ingreso / ahorro
-  static const Color accentRed     = Color(0xFFF43F5E); // gasto / deuda
+  static const Color accentGreen   = Color(0xFF059669); // ingreso / ahorro (Esmeralda)
+  static const Color accentRed     = Color(0xFFDC2626); // gasto / deuda (Coral)
   static const Color accentWarning = Color(0xFFF59E0B); // alerta / eventos
   static const Color accentAI      = Color(0xFF8B5CF6); // IA / suscripciones
   static const Color accentBlue    = Color(0xFF3B82F6); // banco / info
@@ -68,9 +68,9 @@ class AppTheme {
   // ── Chart palette (6 colores, consistente en toda la app) ───────────────
   static const List<Color> chartPalette = [
     accentBlue,        // 0xFF3B82F6
-    accentGreen,       // 0xFF10B981
+    accentGreen,       // 0xFF059669 — Esmeralda
     accentWarning,     // 0xFFF59E0B
-    accentRed,         // 0xFFF43F5E
+    accentRed,         // 0xFFDC2626 — Coral
     accentAI,          // 0xFF8B5CF6
     Color(0xFF06B6D4), // Cyan 500
   ];

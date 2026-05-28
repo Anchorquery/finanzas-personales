@@ -66,9 +66,9 @@ class Workspace {
     }
     switch (type) {
       case WorkspaceType.personal:
-        return const Color(0xFF2B4BEE); // Azul primary
+        return const Color(0xFF7C3AED); // Violeta primary
       case WorkspaceType.family:
-        return const Color(0xFF8B5CF6); // Violeta
+        return const Color(0xFF8B5CF6); // Violeta secundario
       case WorkspaceType.business:
         return const Color(0xFF475569); // Slate
     }

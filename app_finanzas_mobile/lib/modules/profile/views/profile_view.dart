@@ -15,7 +15,7 @@ class ProfileView extends GetView<ProfileController> {
     const Color onSurface = Color(0xFFF8FAFC);
     const Color onSurfaceVariant = Color(0xFF94A3B8);
     const Color primaryColor = Color(0xFF6366F1); // The blue action color
-    const Color dangerColor = Color(0xFFF43F5E); // The red danger color
+    const Color dangerColor = Color(0xFFDC2626); // The red danger color (Coral)
 
     return Scaffold(
       backgroundColor: backgroundDark,

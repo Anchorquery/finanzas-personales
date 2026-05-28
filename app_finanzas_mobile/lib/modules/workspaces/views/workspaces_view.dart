@@ -96,7 +96,7 @@ class WorkspacesView extends GetView<WorkspacesController> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2B4BEE),
+                    backgroundColor: const Color(0xFF7C3AED),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(

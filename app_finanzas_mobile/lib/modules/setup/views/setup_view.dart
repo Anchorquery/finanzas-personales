@@ -1,620 +1,1034 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import '../controllers/setup_controller.dart';
-import '../../../data/models/workspace.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../l10n/gen/app_localizations.dart';
 
+import '../../../core/theme/app_theme.dart';
+import '../../../data/models/workspace.dart';
+import '../../auth/widgets/auth_field.dart';
+import '../../auth/widgets/auth_scaffold.dart';
+import '../controllers/setup_controller.dart';
+
+/// Onboarding de 4 pasos:
+///   0 — Bienvenida
+///   1 — Workspace (tipo + nombre + moneda)
+///   2 — Saldo inicial (tipo cuenta + nombre + monto)
+///   3 — Superpotencias
 class SetupView extends GetView<SetupController> {
   const SetupView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppTheme.backgroundDark,
-              AppTheme.backgroundDark.withValues(alpha: 0.8),
-              const Color(0xFF1E293B),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Obx(() {
-            return Column(
-              children: [
-                _buildHeader(context),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: _buildStepContent(),
+    return AuthScaffold(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 720;
+          return Obx(() {
+            final step = controller.onboardingStep.value;
+            return Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isWide ? 32 : 20,
+                  vertical: 24,
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 540),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _StepHeader(step: step),
+                      const SizedBox(height: 28),
+                      _StepBody(step: step, controller: controller),
+                      const SizedBox(height: 28),
+                      _StepFooter(step: step, controller: controller),
+                    ],
                   ),
                 ),
-                _buildFooter(),
-              ],
+              ),
             );
-          }),
-        ),
+          });
+        },
       ),
     );
   }
+}
 
-  Widget _buildHeader(BuildContext context) {
-    final stepLabels = [
-      'Organización',
-      'Área de Trabajo',
-      'Saldo Inicial',
-      'Ingresos Esperados',
-      'Categorías',
-      'Presupuestos',
-      'Invitaciones',
-    ];
+// ─── HEADER (logo + step pills) ─────────────────────────────────────────────
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          Text(
-            AppL10n.of(context).setupTitle,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+class _StepHeader extends StatelessWidget {
+  final int step;
+  const _StepHeader({required this.step});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppTheme.primary,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Paso ${controller.currentStep.value + 1} de ${SetupController.totalSteps} — ${stepLabels[controller.currentStep.value]}',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 14,
+            const SizedBox(width: 10),
+            Text(
+              'Finanzas Personales',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : AppTheme.primary,
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: List.generate(SetupController.totalSteps, (index) {
-              final isPast = index < controller.currentStep.value;
-              final isCurrent = index == controller.currentStep.value;
-              return Expanded(
-                child: Container(
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  decoration: BoxDecoration(
-                    color: isPast || isCurrent
-                        ? AppTheme.primaryColor
-                        : Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(2),
+            const Spacer(),
+            Text(
+              'Paso ${step + 1} de ${SetupController.onboardingTotal}',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+                color: isDark ? Colors.white60 : AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Row(
+          children: List.generate(SetupController.onboardingTotal, (i) {
+            final active = i <= step;
+            return Expanded(
+              child: Container(
+                height: 5,
+                margin: EdgeInsets.only(right: i == 3 ? 0 : 8),
+                decoration: BoxDecoration(
+                  color: active
+                      ? AppTheme.primary
+                      : (isDark
+                          ? Colors.white12
+                          : const Color(0xFFEDEAF6)),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── BODY ────────────────────────────────────────────────────────────────────
+
+class _StepBody extends StatelessWidget {
+  final int step;
+  final SetupController controller;
+  const _StepBody({required this.step, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    switch (step) {
+      case 0:
+        return const _WelcomeStep();
+      case 1:
+        return _WorkspaceStep(controller: controller);
+      case 2:
+        return _BalanceStep(controller: controller);
+      case 3:
+        return const _PowersStep();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+}
+
+// ─── STEP 0: Bienvenida ─────────────────────────────────────────────────────
+
+class _WelcomeStep extends StatelessWidget {
+  const _WelcomeStep();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      children: [
+        SizedBox(
+          height: 220,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.primary.withValues(alpha: 0.10),
+                ),
+              ),
+              Container(
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.primary,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: 0.30),
+                      blurRadius: 32,
+                      offset: const Offset(0, 14),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: Colors.white,
+                  size: 56,
+                ),
+              ),
+              // Orbits
+              Container(
+                width: 220,
+                height: 220,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppTheme.primary.withValues(alpha: 0.20),
                   ),
                 ),
-              );
-            }),
+              ),
+              Positioned(
+                top: 8,
+                child: _OrbitDot(color: AppTheme.accentGreen, size: 14),
+              ),
+              const Positioned(
+                bottom: 22,
+                right: 40,
+                child: _OrbitDot(color: Color(0xFFFF6B6B), size: 18),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 28),
+        Text(
+          'Tu vida financiera, organizada.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
+            height: 1.2,
+            letterSpacing: -0.5,
+            color: isDark ? Colors.white : const Color(0xFF1A1C1C),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Te tomará menos de 2 minutos configurar tu espacio.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14.5,
+            color: isDark ? Colors.white60 : AppTheme.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrbitDot extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _OrbitDot({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.40),
+            blurRadius: 12,
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildStepContent() {
-    switch (controller.currentStep.value) {
-      case 0:
-        return _stepOrganization();
-      case 1:
-        return _stepWorkspace();
-      case 2:
-        return _stepAccount();
-      case 3:
-        return _stepIncomePlans();
-      case 4:
-        return _stepTemplate();
-      case 5:
-        return _stepBudgetPlans();
-      case 6:
-        return _stepInvitations();
-      default:
-        return const SizedBox.shrink();
-    }
-  }
+// ─── STEP 1: Workspace ──────────────────────────────────────────────────────
 
-  // PASO 0: Organización
-  Widget _stepOrganization() {
+class _WorkspaceStep extends StatelessWidget {
+  final SetupController controller;
+  const _WorkspaceStep({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStepTitle(
-          'Tu Organización',
-          'Define el nombre de tu hogar o empresa.',
-        ),
-        const SizedBox(height: 32),
-        _buildTextField(
-          controller: controller.orgNameController,
-          label: 'Nombre de la Organización',
-          icon: Icons.business,
-        ),
-        const SizedBox(height: 40),
-        const Text(
-          'Configuración IA',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Obx(
-          () => SwitchListTile(
-            title: const Text(
-              'Habilitar Funciones IA',
-              style: TextStyle(color: Colors.white),
-            ),
-            value: controller.aiEnabled.value,
-            onChanged: (val) => controller.aiEnabled.value = val,
-            activeThumbColor: AppTheme.primaryColor,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildTextField(
-          controller: controller.geminiKeyController,
-          label: 'Gemini API Key (Opcional)',
-          icon: Icons.vpn_key,
-          isPassword: true,
-        ),
-      ],
-    );
-  }
-
-  // PASO 1: Workspace
-  Widget _stepWorkspace() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStepTitle(
-          'Área de Trabajo',
-          'Elige cómo organizarás tus cuentas.',
-        ),
-        const SizedBox(height: 32),
-        _buildTextField(
-          controller: controller.workspaceNameController,
-          label: 'Nombre del Workspace',
-          icon: Icons.workspaces_outline,
-        ),
-        const SizedBox(height: 24),
-        const Text(
-          'Tipo de Workspace',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        Obx(
-          () => Wrap(
-            spacing: 12,
-            children: WorkspaceType.values.map((type) {
-              final isSelected = controller.selectedWorkspaceType.value == type;
-              return ChoiceChip(
-                label: Text(type.name.toUpperCase()),
-                selected: isSelected,
-                onSelected: (_) =>
-                    controller.selectedWorkspaceType.value = type,
-                selectedColor: AppTheme.primaryColor,
-                labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white70,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        const SizedBox(height: 32),
-        const Text(
-          'Moneda Principal',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        Obx(
-          () => DropdownButtonFormField<String>(
-            initialValue: controller.selectedCurrency.value,
-            dropdownColor: AppTheme.backgroundDark,
-            style: const TextStyle(color: Colors.white),
-            decoration: _inputDecoration('Moneda', Icons.payments_outlined),
-            items: [
-              'USD',
-              'VES',
-              'EUR',
-              'COP',
-            ].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-            onChanged: (val) => controller.selectedCurrency.value = val!,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // PASO 2: Saldo Inicial
-  Widget _stepAccount() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStepTitle(
-          'Saldo Inicial',
-          '¿Cuánto dinero tienes actualmente? Este paso es obligatorio.',
-        ),
-        const SizedBox(height: 32),
-        _buildTextField(
-          controller: controller.accountNameController,
-          label: 'Nombre de la Cuenta *',
-          icon: Icons.account_balance_wallet_outlined,
-          hint: 'Ej: Efectivo, Banco...',
-        ),
-        const SizedBox(height: 24),
-        _buildTextField(
-          controller: controller.initialBalanceController,
-          label: 'Saldo Actual *',
-          icon: Icons.numbers,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          hint: '0.00',
-        ),
-      ],
-    );
-  }
-
-  // PASO 3: Ingresos Esperados
-  Widget _stepIncomePlans() {
-    final cur = controller.selectedCurrency.value;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStepTitle(
-          'Ingresos Esperados',
-          'Ingresos que recibes mensualmente (Obligatorio agregar al menos uno).',
-        ),
-        const SizedBox(height: 24),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              _buildTextField(
-                controller: controller.incomeNameController,
-                label: 'Nombre del ingreso',
-                icon: Icons.label_outline,
-                hint: 'Ej: Salario',
-              ),
-              const SizedBox(height: 12),
-              _buildTextField(
-                controller: controller.incomeAmountController,
-                label: 'Monto mensual ($cur)',
-                icon: Icons.attach_money,
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: controller.addIncomePlan,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Añadir'),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        Obx(() {
-          if (controller.incomePlans.isEmpty) {
-            return _buildEmptyState(
-              icon: Icons.money_off,
-              message: 'Añade tu fuente de ingresos para continuar.',
-            );
-          }
-          return ListView.builder(
-            shrinkWrap: true,
-            itemCount: controller.incomePlans.length,
-            itemBuilder: (context, index) {
-              final plan = controller.incomePlans[index];
-              return ListTile(
-                title: Text(
-                  plan.name,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                subtitle: Text(
-                  '${plan.amount} $cur',
-                  style: const TextStyle(color: AppTheme.accentGreen),
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.remove_circle, color: Colors.red),
-                  onPressed: () => controller.removeIncomePlan(index),
-                ),
-              );
-            },
-          );
-        }),
-      ],
-    );
-  }
-
-  // PASO 4: Plantilla de Categorías
-  Widget _stepTemplate() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStepTitle(
-          'Plantilla',
-          'Elige un conjunto de categorías iniciales.',
-        ),
-        const SizedBox(height: 32),
-        _buildTemplateCard(
-          'Estándar',
-          'Más común: Comida, Hogar...',
-          'standard',
-          Icons.person,
-        ),
-        _buildTemplateCard(
-          'Estudiante',
-          'Enfoque educación y ocio.',
-          'student',
-          Icons.school,
-        ),
-        _buildTemplateCard(
-          'Negocio',
-          'Gastos operativos.',
-          'business',
-          Icons.work,
-        ),
-      ],
-    );
-  }
-
-  // PASO 5: Presupuestos de Gasto
-  Widget _stepBudgetPlans() {
-    final cur = controller.selectedCurrency.value;
-    final suggested = controller.suggestedBudgetPlans;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStepTitle(
-          'Límites de Gasto',
-          'Puedes dejarlos vacíos y usar los montos sugeridos según tu ingreso base.',
-        ),
-        const SizedBox(height: 24),
-        ...controller.budgetPlans.keys.map((cat) {
-          final hint = (suggested[cat] ?? 0).toStringAsFixed(2);
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: TextField(
-              onChanged: (val) => controller.updateBudget(cat, val),
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: _inputDecoration(
-                '$cat ($cur)',
-                Icons.shopping_bag_outlined,
-              ).copyWith(hintText: hint),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  // PASO 6: Invitaciones
-  Widget _stepInvitations() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStepTitle(
-          'Invita a tu equipo',
-          'Comparte este espacio con otros integrantes. (Opcional)',
-        ),
-        const SizedBox(height: 32),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: controller.inviteEmailController,
-                label: 'Email',
-                icon: Icons.person_add,
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: controller.addInvitation,
-              icon: const Icon(Icons.send, color: AppTheme.primaryColor),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        Obx(
-          () => Column(
-            children: controller.invitedEmails
-                .map(
-                  (e) => ListTile(
-                    title: Text(e, style: const TextStyle(color: Colors.white)),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.white54),
-                      onPressed: () => controller.removeInvitation(e),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // --- WIDGETS AUX ---
-  Widget _buildStepTitle(String title, String subtitle) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          title,
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+          '¿Para qué vas a usar Finanzas Personales?',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            height: 1.25,
+            color: isDark ? Colors.white : const Color(0xFF1A1C1C),
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          subtitle,
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          'Podrás crear más workspaces después.',
+          style: TextStyle(
+            fontSize: 13.5,
+            color: isDark ? Colors.white60 : AppTheme.textSecondary,
+          ),
         ),
+        const SizedBox(height: 24),
+        Obx(
+          () => Column(
+            children: [
+              _TypeCard(
+                icon: Icons.person_outline_rounded,
+                title: 'Personal',
+                subtitle: 'Mis finanzas individuales',
+                accent: AppTheme.primary,
+                selected: controller.selectedWorkspaceType.value ==
+                    WorkspaceType.personal,
+                onTap: () => controller.selectedWorkspaceType.value =
+                    WorkspaceType.personal,
+              ),
+              const SizedBox(height: 12),
+              _TypeCard(
+                icon: Icons.groups_2_outlined,
+                title: 'Familiar',
+                subtitle: 'Comparte con tu familia',
+                accent: AppTheme.accentGreen,
+                selected: controller.selectedWorkspaceType.value ==
+                    WorkspaceType.family,
+                onTap: () => controller.selectedWorkspaceType.value =
+                    WorkspaceType.family,
+              ),
+              const SizedBox(height: 12),
+              _TypeCard(
+                icon: Icons.business_center_outlined,
+                title: 'Negocio',
+                subtitle: 'Lleva las cuentas de tu emprendimiento',
+                accent: AppTheme.accentWarning,
+                selected: controller.selectedWorkspaceType.value ==
+                    WorkspaceType.business,
+                onTap: () => controller.selectedWorkspaceType.value =
+                    WorkspaceType.business,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 22),
+        AuthField(
+          label: 'Nombre del workspace',
+          controller: controller.workspaceNameController,
+          icon: Icons.workspaces_outline,
+          hint: 'Ej: Principal, Casa, Empresa…',
+          isDark: isDark,
+        ),
+        const SizedBox(height: 18),
+        Text(
+          'MONEDA PRINCIPAL',
+          style: TextStyle(
+            fontSize: 11,
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white54 : AppTheme.textHint,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _CurrencyDropdown(controller: controller, isDark: isDark),
       ],
     );
   }
+}
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool isPassword = false,
-    String? hint,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: isPassword,
-      keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
-      decoration: _inputDecoration(label, icon).copyWith(
-        hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white24),
-      ),
-    );
-  }
+class _TypeCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accent;
+  final bool selected;
+  final VoidCallback onTap;
 
-  InputDecoration _inputDecoration(String label, IconData icon) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.white60),
-      prefixIcon: Icon(icon, color: AppTheme.primaryColor),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppTheme.primaryColor),
-      ),
-      filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.05),
-    );
-  }
+  const _TypeCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accent,
+    required this.selected,
+    required this.onTap,
+  });
 
-  Widget _buildTemplateCard(
-    String title,
-    String desc,
-    String value,
-    IconData icon,
-  ) {
-    return Obx(() {
-      final isSelected = controller.selectedTemplate.value == value;
-      return GestureDetector(
-        onTap: () => controller.selectTemplate(value),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
           decoration: BoxDecoration(
-            color: isSelected
-                ? AppTheme.primaryColor.withValues(alpha: 0.15)
-                : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(12),
+            color: isDark
+                ? (selected
+                    ? AppTheme.primary.withValues(alpha: 0.12)
+                    : const Color(0x12FFFFFF))
+                : Colors.white,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected
-                  ? AppTheme.primaryColor
-                  : Colors.white.withValues(alpha: 0.1),
+              color: selected
+                  ? AppTheme.primary
+                  : (isDark
+                      ? const Color(0x14FFFFFF)
+                      : const Color(0xFFEDEAF6)),
+              width: selected ? 2 : 1,
             ),
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: isSelected ? AppTheme.primaryColor : Colors.white38,
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accent.withValues(alpha: 0.12),
+                ),
+                child: Icon(icon, color: accent, size: 22),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? Colors.white
+                            : const Color(0xFF1A1C1C),
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
-                      desc,
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12,
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: isDark
+                            ? Colors.white60
+                            : AppTheme.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
+              if (selected)
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.primary,
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CurrencyDropdown extends StatelessWidget {
+  final SetupController controller;
+  final bool isDark;
+  const _CurrencyDropdown({required this.controller, required this.isDark});
+
+  static const _options = {
+    'USD': 'USD — Dólar Estadounidense',
+    'EUR': 'EUR — Euro',
+    'VES': 'VES — Bolívar Venezolano',
+    'COP': 'COP — Peso Colombiano',
+    'MXN': 'MXN — Peso Mexicano',
+    'ARS': 'ARS — Peso Argentino',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      return Container(
+        height: 54,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF13161F) : Colors.white,
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(
+            color: isDark
+                ? const Color(0x22FFFFFF)
+                : const Color(0xFFE2E0F7),
+          ),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: controller.selectedCurrency.value,
+            isExpanded: true,
+            dropdownColor: isDark
+                ? AppTheme.surfaceDark
+                : Colors.white,
+            icon: Icon(
+              Icons.expand_more_rounded,
+              color: isDark ? Colors.white60 : AppTheme.textHint,
+            ),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.white : const Color(0xFF1A1C1C),
+            ),
+            items: _options.entries
+                .map(
+                  (e) => DropdownMenuItem(
+                    value: e.key,
+                    child: Text(e.value),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) {
+              if (v != null) controller.selectedCurrency.value = v;
+            },
           ),
         ),
       );
     });
   }
+}
 
-  Widget _buildEmptyState({required IconData icon, required String message}) {
-    return Center(
-      child: Column(
+// ─── STEP 2: Saldo inicial ──────────────────────────────────────────────────
+
+class _BalanceStep extends StatelessWidget {
+  final SetupController controller;
+  const _BalanceStep({required this.controller});
+
+  static const _types = [
+    ('cash', '💵', 'Efectivo'),
+    ('bank', '🏦', 'Banco'),
+    ('credit_card', '💳', 'Tarjeta'),
+    ('investment', '📈', 'Inversión'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          '¿Cuánto tienes ahora mismo?',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            height: 1.25,
+            color: isDark ? Colors.white : const Color(0xFF1A1C1C),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Es tu punto de partida. Podrás añadir más cuentas después.',
+          style: TextStyle(
+            fontSize: 13.5,
+            color: isDark ? Colors.white60 : AppTheme.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 22),
+        Text(
+          'TIPO DE CUENTA',
+          style: TextStyle(
+            fontSize: 11,
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white54 : AppTheme.textHint,
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 48,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _types.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (context, i) {
+              final (value, emoji, label) = _types[i];
+              return Obx(() {
+                final selected = controller.accountType.value == value;
+                return MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      controller.accountType.value = value;
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppTheme.primary
+                            : (isDark ? const Color(0x12FFFFFF) : Colors.white),
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(
+                          color: selected
+                              ? AppTheme.primary
+                              : (isDark
+                                  ? const Color(0x22FFFFFF)
+                                  : const Color(0xFFEDEAF6)),
+                        ),
+                        boxShadow: selected
+                            ? [
+                                BoxShadow(
+                                  color: AppTheme.primary
+                                      .withValues(alpha: 0.25),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(emoji,
+                              style: const TextStyle(fontSize: 16)),
+                          const SizedBox(width: 8),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: selected
+                                  ? Colors.white
+                                  : (isDark
+                                      ? Colors.white70
+                                      : AppTheme.textSecondary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              });
+            },
+          ),
+        ),
+        const SizedBox(height: 18),
+        AuthField(
+          label: 'Nombre de la cuenta',
+          controller: controller.accountNameController,
+          icon: Icons.account_balance_wallet_outlined,
+          hint: 'Ej: Billetera, BBVA…',
+          isDark: isDark,
+        ),
+        const SizedBox(height: 22),
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF13161F) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark
+                  ? const Color(0x14FFFFFF)
+                  : const Color(0xFFEDEAF6),
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'BALANCE ACTUAL',
+                style: TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 1.6,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white54 : AppTheme.textHint,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    _currencySymbol(controller.selectedCurrency.value),
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IntrinsicWidth(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 240),
+                      child: TextField(
+                        controller: controller.initialBalanceController,
+                        textAlign: TextAlign.center,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'[0-9.]')),
+                        ],
+                        style: TextStyle(
+                          fontSize: 38,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -1.2,
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1A1C1C),
+                        ),
+                        decoration: const InputDecoration(
+                          isCollapsed: true,
+                          filled: false,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          hintText: '0.00',
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Puedes dejarlo en 0 si empiezas desde cero.',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: isDark ? Colors.white60 : AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  static String _currencySymbol(String code) => switch (code) {
+        'USD' => r'$',
+        'EUR' => '€',
+        'VES' => 'Bs.',
+        'COP' => r'$',
+        'MXN' => r'$',
+        'ARS' => r'$',
+        _ => code,
+      };
+}
+
+// ─── STEP 3: Superpotencias ─────────────────────────────────────────────────
+
+class _PowersStep extends StatelessWidget {
+  const _PowersStep();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Listo. Esto es lo que puedes hacer:',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            height: 1.25,
+            color: isDark ? Colors.white : const Color(0xFF1A1C1C),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Tu nueva vida financiera comienza ahora con estas herramientas.',
+          style: TextStyle(
+            fontSize: 13.5,
+            color: isDark ? Colors.white60 : AppTheme.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 22),
+        _FeatureCard(
+          icon: Icons.psychology_rounded,
+          color: AppTheme.primary,
+          title: 'Coach financiero 24/7',
+          subtitle:
+              'Te sugiere ahorros, alerta excesos y cuida tus metas en tiempo real.',
+          glow: true,
+        ),
+        const SizedBox(height: 12),
+        _FeatureCard(
+          icon: Icons.document_scanner_outlined,
+          color: AppTheme.accentGreen,
+          title: 'Captura gastos en 2 segundos',
+          subtitle:
+              'Foto al ticket y listo. Clasificamos el gasto automáticamente.',
+        ),
+        const SizedBox(height: 12),
+        _FeatureCard(
+          icon: Icons.auto_graph_rounded,
+          color: AppTheme.accentWarning,
+          title: 'Entiende a dónde se va tu dinero',
+          subtitle:
+              'Gráficos semanales que revelan patrones de los que no eras consciente.',
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1B4B),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0x22FFFFFF)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.accentGreen,
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          AppTheme.accentGreen.withValues(alpha: 0.7),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Tu primer consejo aparecerá automáticamente en el dashboard según tus movimientos.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12.5,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FeatureCard extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final bool glow;
+
+  const _FeatureCard({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    this.glow = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0x12FFFFFF) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? const Color(0x14FFFFFF)
+              : const Color(0xFFEDEAF6),
+        ),
+        boxShadow: glow
+            ? [
+                BoxShadow(
+                  color: AppTheme.primary.withValues(alpha: 0.08),
+                  blurRadius: 22,
+                  offset: const Offset(0, 10),
+                ),
+              ]
+            : null,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.white24, size: 40),
-          const SizedBox(height: 8),
-          Text(message, style: const TextStyle(color: Colors.white24)),
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? Colors.white
+                        : const Color(0xFF1A1C1C),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    height: 1.4,
+                    color: isDark
+                        ? Colors.white60
+                        : AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildFooter() {
-    final isLast =
-        controller.currentStep.value == SetupController.totalSteps - 1;
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (controller.currentStep.value > 0)
-            TextButton(
-              onPressed: controller.previousStep,
-              child: const Text(
-                'Atrás',
-                style: TextStyle(color: Colors.white60),
+// ─── FOOTER (Atrás + CTA) ───────────────────────────────────────────────────
+
+class _StepFooter extends StatelessWidget {
+  final int step;
+  final SetupController controller;
+  const _StepFooter({required this.step, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isFirst = step == 0;
+    final isLast = step == SetupController.onboardingTotal - 1;
+
+    final ctaLabel = isFirst
+        ? 'Empezar'
+        : (isLast ? 'Ir a mi Dashboard' : 'Continuar');
+
+    return Row(
+      children: [
+        if (!isFirst)
+          OutlinedButton(
+            onPressed: controller.previousOnboarding,
+            style: OutlinedButton.styleFrom(
+              foregroundColor:
+                  isDark ? Colors.white70 : AppTheme.textSecondary,
+              side: BorderSide(
+                color: isDark
+                    ? const Color(0x22FFFFFF)
+                    : const Color(0xFFEDEAF6),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 16,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
               ),
             ),
-          const Spacer(),
-          ElevatedButton(
-            onPressed: controller.isLoading.value
-                ? null
-                : (isLast ? controller.finishSetup : controller.nextStep),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            child: const Text(
+              'Atrás',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            child: controller.isLoading.value
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Text(isLast ? 'Finalizar' : 'Siguiente'),
           ),
-        ],
-      ),
+        const Spacer(),
+        Obx(
+          () => SizedBox(
+            height: 52,
+            child: ElevatedButton(
+              onPressed: controller.isLoading.value
+                  ? null
+                  : () {
+                      if (isLast) {
+                        controller.finishSetup();
+                      } else {
+                        controller.nextOnboarding();
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                disabledBackgroundColor:
+                    AppTheme.primary.withValues(alpha: 0.5),
+              ),
+              child: controller.isLoading.value
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.4,
+                      ),
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          ctaLabel,
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward_rounded, size: 18),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

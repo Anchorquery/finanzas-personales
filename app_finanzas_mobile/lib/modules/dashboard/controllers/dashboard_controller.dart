@@ -37,9 +37,6 @@ class DashboardController extends GetxController {
   final previousIncome = 0.0.obs;
   final previousExpense = 0.0.obs;
 
-  // Vista de dashboard: false = clásica, true = alternativa
-  final useAlternativeView = false.obs;
-
   @override
   void onInit() {
     super.onInit();
@@ -287,10 +284,6 @@ class DashboardController extends GetxController {
 
   void changeTab(int index) {
     tabIndex.value = index;
-  }
-
-  void toggleDashboardView() {
-    useAlternativeView.value = !useAlternativeView.value;
   }
 
   double get monthlyNetFlow => totalIncome.value - totalExpense.value;

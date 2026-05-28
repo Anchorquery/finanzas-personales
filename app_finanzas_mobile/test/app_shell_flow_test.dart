@@ -1,7 +1,6 @@
 import 'package:app_finanzas_mobile/data/services/auth_service.dart';
 import 'package:app_finanzas_mobile/data/services/directus_service.dart';
 import 'package:app_finanzas_mobile/modules/dashboard/controllers/dashboard_controller.dart';
-import 'package:app_finanzas_mobile/modules/dashboard/views/dashboard_alt_view.dart';
 import 'package:app_finanzas_mobile/modules/dashboard/views/dashboard_view.dart';
 import 'package:app_finanzas_mobile/modules/home/controllers/home_controller.dart';
 import 'package:app_finanzas_mobile/modules/organizations/controllers/organizations_controller.dart';
@@ -300,6 +299,9 @@ void main() {
     Get.put<HomeController>(HomeController());
     Get.put<DashboardController>(DashboardController());
 
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await tester.pumpWidget(
       GetMaterialApp(
         getPages: [
@@ -314,7 +316,8 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Presupuestos').last);
-    await tester.tap(find.text('Presupuestos').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Presupuestos').last, warnIfMissed: false);
     await tester.pumpAndSettle();
 
     expect(
@@ -323,45 +326,4 @@ void main() {
     );
   });
 
-  testWidgets(
-    'dashboard alternativo reutiliza el shell al abrir presupuestos',
-    (tester) async {
-      Get.put<WorkspacesController>(
-        TestWorkspacesController(
-          Workspace(
-            id: 'ws-1',
-            name: 'Principal',
-            type: WorkspaceType.personal,
-            description: 'Workspace principal',
-            organizationId: 'org-1',
-            currency: 'USD',
-          ),
-        ),
-      );
-      Get.put<DashboardController>(DashboardController());
-      Get.put<HomeController>(HomeController());
-
-      await tester.pumpWidget(
-        GetMaterialApp(
-          getPages: [
-            GetPage(name: Routes.budgets, page: () => const SizedBox.shrink()),
-          ],
-          home: Scaffold(
-            key: Get.find<HomeController>().scaffoldKey,
-            body: const DashboardAltView(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.ensureVisible(find.text('Presupuestos').last);
-      await tester.tap(find.text('Presupuestos').last);
-      await tester.pumpAndSettle();
-
-      expect(
-        Get.find<HomeController>().currentIndex.value,
-        HomeController.budgetsIndex,
-      );
-    },
-  );
 }

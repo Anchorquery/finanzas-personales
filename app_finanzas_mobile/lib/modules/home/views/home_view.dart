@@ -5,10 +5,8 @@ import 'package:app_finanzas_mobile/core/widgets/navigation/custom_bottom_naviga
 import 'package:app_finanzas_mobile/core/widgets/navigation/custom_bottom_nav_bar_item.dart';
 import '../controllers/home_controller.dart';
 import '../../dashboard/views/dashboard_view.dart';
-import '../../dashboard/views/dashboard_alt_view.dart';
 import '../../profile/views/profile_view.dart';
 import '../../../routes/app_routes.dart';
-import '../../dashboard/controllers/dashboard_controller.dart';
 import '../../stats/views/stats_view.dart';
 import '../../ai_coach/views/ai_coach_view.dart';
 import '../../settings/views/settings_view.dart';
@@ -35,14 +33,12 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   late final HomeController controller;
-  late final DashboardController dashController;
   bool _sidebarCollapsed = false;
 
   @override
   void initState() {
     super.initState();
     controller = Get.find<HomeController>();
-    dashController = Get.find<DashboardController>();
 
     if (controller.currentIndex.value != widget.initialIndex) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -130,18 +126,14 @@ class _HomeViewState extends State<HomeView> {
     if (stackIndex > 2) stackIndex -= 1;
     if (stackIndex < 0) stackIndex = 0;
 
-    final dashboardWidget = dashController.useAlternativeView.value
-        ? const DashboardAltView()
-        : const DashboardView();
-
     if (stackIndex <= 3) {
       return IndexedStack(
         index: stackIndex,
-        children: [
-          dashboardWidget,
-          const StatsView(),
-          const AICoachView(),
-          const SettingsView(),
+        children: const [
+          DashboardView(),
+          StatsView(),
+          AICoachView(),
+          SettingsView(),
         ],
       );
     }
@@ -158,7 +150,7 @@ class _HomeViewState extends State<HomeView> {
       12 => const WorkspacesView(),
       13 => const RecurringView(),
       14 => const ProfileView(),
-      _ => dashboardWidget,
+      _ => const DashboardView(),
     };
   }
 

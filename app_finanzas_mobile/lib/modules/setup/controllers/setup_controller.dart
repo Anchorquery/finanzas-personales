@@ -56,7 +56,13 @@ class SetupController extends GetxController {
 
   // Paso 2: Initial Account & Balance
   final accountNameController = TextEditingController(text: 'Efectivo');
-  final initialBalanceController = TextEditingController();
+  final initialBalanceController = TextEditingController(text: '0.00');
+  // 'cash' | 'bank' | 'card' | 'investment'
+  final accountType = 'cash'.obs;
+
+  // Onboarding (4 pasos) — independiente de currentStep (7 pasos legacy)
+  final onboardingStep = 0.obs;
+  static const int onboardingTotal = 4;
 
   // Paso 3: Income Plans
   final incomePlans = <_Entry>[].obs;
@@ -213,6 +219,46 @@ class SetupController extends GetxController {
     selectedTemplate.value = template;
   }
 
+  // ── Onboarding (4 pasos) ─────────────────────────────────────────────
+  String? _validateOnboardingStep() {
+    switch (onboardingStep.value) {
+      case 0:
+        return null;
+      case 1:
+        if (workspaceNameController.text.trim().isEmpty) {
+          return 'Ingresa un nombre para el workspace.';
+        }
+        return null;
+      case 2:
+        if (accountNameController.text.trim().isEmpty) {
+          return 'Ingresa un nombre para la cuenta.';
+        }
+        final balance = double.tryParse(initialBalanceController.text.trim());
+        if (balance == null) return 'Ingresa un saldo válido (0 está bien).';
+        if (balance < 0) return 'El saldo no puede ser negativo.';
+        return null;
+      default:
+        return null;
+    }
+  }
+
+  void nextOnboarding() {
+    final error = _validateOnboardingStep();
+    if (error != null) {
+      SnackbarService.showWarning('Paso incompleto', error);
+      return;
+    }
+    if (onboardingStep.value < onboardingTotal - 1) {
+      onboardingStep.value++;
+    }
+  }
+
+  void previousOnboarding() {
+    if (onboardingStep.value > 0) {
+      onboardingStep.value--;
+    }
+  }
+
   void nextStep() {
     final error = _validateCurrentStep();
     if (error != null) {
@@ -359,7 +405,7 @@ class SetupController extends GetxController {
           Account(
             id: '',
             name: accountNameController.text.trim(),
-            type: 'cash',
+            type: accountType.value,
             currency: selectedCurrency.value,
             initialBalance: balance,
             workspaceId: workspaceId,

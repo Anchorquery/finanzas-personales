@@ -5,10 +5,12 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/snackbar_service.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/services/auth_service.dart';
-import '../../../l10n/gen/app_localizations.dart';
 import '../../../routes/app_routes.dart';
-import '../widgets/auth_field.dart';
 import '../widgets/auth_scaffold.dart';
+
+// ════════════════════════════════════════════════════════════════════════
+// Controller
+// ════════════════════════════════════════════════════════════════════════
 
 class RegisterController extends GetxController {
   final AuthService _authService = Get.find();
@@ -98,81 +100,199 @@ class RegisterController extends GetxController {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// View — split mobile + desktop
+// ════════════════════════════════════════════════════════════════════════
+
 class RegisterView extends StatelessWidget {
   const RegisterView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(RegisterController());
-
     return AuthScaffold(
-      child: Column(
-        children: [
-          const _GlassHeader(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 28,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth >= 1024) {
+            return _DesktopRegister(controller: controller);
+          }
+          return _MobileRegister(controller: controller);
+        },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// MOBILE — registro_violet_fintech
+// Glass sticky header + centered card "Comienza tu viaje"
+// ─────────────────────────────────────────────────────────────────────────
+
+class _MobileRegister extends StatelessWidget {
+  final RegisterController controller;
+  const _MobileRegister({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Sticky glass header
+        Container(
+          height: 64,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.80),
+            border: const Border(
+              bottom: BorderSide(color: Color(0x14000000)),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 480),
+              const SizedBox(width: 8),
+              const Text(
+                'Finanzas Personales',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 48),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: _RegisterCard(
+                  controller: controller,
+                  variant: _CardVariant.mobile,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// DESKTOP — registro_desktop
+// 2-col grid: LEFT branding + bento features, RIGHT register card 480
+// ─────────────────────────────────────────────────────────────────────────
+
+class _DesktopRegister extends StatelessWidget {
+  final RegisterController controller;
+  const _DesktopRegister({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // LEFT — branding + bento
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 48),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _RegisterCard(controller: controller),
-                      const SizedBox(height: 18),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            AppL10n.of(context).authRegisterHaveAccount,
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              color: AppTheme.textSecondary,
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.account_balance_wallet_rounded,
+                              color: Colors.white,
+                              size: 24,
                             ),
                           ),
-                          TextButton(
-                            onPressed: () => Get.back(),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              ' ${AppL10n.of(context).authRegisterLogin}',
-                              style: const TextStyle(
-                                color: AppTheme.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14.5,
-                              ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Finanzas Personales',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1C1C),
+                              letterSpacing: -0.3,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 28),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.verified_user_outlined,
-                            size: 13,
-                            color: AppTheme.textSecondary
-                                .withValues(alpha: 0.4),
+                      const SizedBox(height: 32),
+                      const Text(
+                        'Tu futuro financiero,',
+                        style: TextStyle(
+                          fontSize: 44,
+                          fontWeight: FontWeight.w700,
+                          height: 1.1,
+                          letterSpacing: -1,
+                          color: Color(0xFF1A1C1C),
+                        ),
+                      ),
+                      const Text(
+                        'asegurado hoy.',
+                        style: TextStyle(
+                          fontSize: 44,
+                          fontWeight: FontWeight.w700,
+                          height: 1.1,
+                          letterSpacing: -1,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const SizedBox(
+                        width: 480,
+                        child: Text(
+                          'Únete a miles de profesionales que confían en nuestra infraestructura premium para gestionar sus activos con total transparencia.',
+                          style: TextStyle(
+                            fontSize: 17,
+                            height: 1.5,
+                            color: AppTheme.textSecondary,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'SAFE & SECURE VAULTING',
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              letterSpacing: 1.6,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textSecondary
-                                  .withValues(alpha: 0.4),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      // Bento feature cards
+                      Row(
+                        children: const [
+                          Expanded(
+                            child: _BentoCard(
+                              icon: Icons.verified_user_outlined,
+                              title: 'Seguridad de grado bancario',
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: _BentoCard(
+                              icon: Icons.bolt_outlined,
+                              title: 'Transacciones instantáneas',
                             ),
                           ),
                         ],
@@ -181,77 +301,47 @@ class RegisterView extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
+              // RIGHT — register card
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: _RegisterCard(
+                  controller: controller,
+                  variant: _CardVariant.desktop,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-
-class _GlassHeader extends StatelessWidget {
-  const _GlassHeader();
+class _BentoCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  const _BentoCard({required this.icon, required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        border: const Border(
-          bottom: BorderSide(color: Color(0x14000000)),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFCCC3D8)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: AppTheme.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.favorite_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          const Text(
-            'Finanzas Personales',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.primary,
-            ),
-          ),
-          const Spacer(),
-          MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
-              onTap: () => Get.back(),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: const Color(0xFFF1F0FB),
-                ),
-                child: const Text(
-                  'Entrar',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primary,
-                  ),
-                ),
-              ),
+          Icon(icon, color: AppTheme.primary, size: 26),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1C1C),
             ),
           ),
         ],
@@ -260,25 +350,40 @@ class _GlassHeader extends StatelessWidget {
   }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────
+// Shared register card body
+// ─────────────────────────────────────────────────────────────────────────
+
+enum _CardVariant { mobile, desktop }
 
 class _RegisterCard extends StatelessWidget {
   final RegisterController controller;
-  const _RegisterCard({required this.controller});
+  final _CardVariant variant;
+  const _RegisterCard({
+    required this.controller,
+    required this.variant,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = variant == _CardVariant.mobile;
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
+      padding: EdgeInsets.all(isMobile ? 32 : 40),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF1F0FB)),
+        borderRadius: BorderRadius.circular(isMobile ? 16 : 12),
+        border: Border.all(
+          color: isMobile
+              ? const Color(0x33CCC3D8)
+              : const Color(0xFFF1F0FB),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 30,
-            offset: const Offset(0, 18),
+            color: isMobile
+                ? Colors.black.withValues(alpha: 0.05)
+                : const Color(0xFF630ED4).withValues(alpha: 0.04),
+            blurRadius: isMobile ? 30 : 48,
+            offset: const Offset(0, 20),
           ),
         ],
       ),
@@ -286,72 +391,131 @@ class _RegisterCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Comienza tu viaje',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
+            Text(
+              isMobile ? 'Comienza tu viaje' : 'Crea tu cuenta',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
                 color: Color(0xFF1A1C1C),
+                letterSpacing: -0.2,
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'Crea tu cuenta y toma el control de tus finanzas.',
-              style: TextStyle(
-                fontSize: 14,
+            const SizedBox(height: 8),
+            Text(
+              isMobile
+                  ? 'Únete a la nueva era de la banca digital premium.'
+                  : 'Comienza tu viaje financiero en segundos.',
+              style: const TextStyle(
+                fontSize: 15,
                 color: AppTheme.textSecondary,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
-            AuthField(
-              label: 'Nombre Completo',
+            // Nombre
+            _RegLabel('Nombre completo'),
+            const SizedBox(height: 6),
+            _RegField(
               controller: controller.nameParams,
               icon: Icons.person_outline_rounded,
-              hint: 'Ej. Daniel García',
+              hint: isMobile ? 'Ej. Alejandro García' : 'John Doe',
               autofillHints: const [AutofillHints.name],
-              textInputAction: TextInputAction.next,
             ),
-            const SizedBox(height: 16),
-            AuthField(
-              label: 'Correo Electrónico',
+            const SizedBox(height: 20),
+
+            // Email
+            _RegLabel('Correo electrónico'),
+            const SizedBox(height: 6),
+            _RegField(
               controller: controller.emailParams,
               icon: Icons.mail_outline_rounded,
-              hint: 'nombre@ejemplo.com',
+              hint: isMobile ? 'nombre@ejemplo.com' : 'nombre@empresa.com',
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
-              textInputAction: TextInputAction.next,
             ),
-            const SizedBox(height: 16),
-            Obx(
-              () => AuthField(
-                label: 'Contraseña',
-                controller: controller.passParams,
-                icon: Icons.lock_outline_rounded,
-                hint: 'Mínimo 8 caracteres',
-                isPassword: true,
-                isPasswordVisible: controller.isPasswordVisible.value,
-                onTogglePassword: controller.togglePasswordVisibility,
-                autofillHints: const [AutofillHints.newPassword],
-                textInputAction: TextInputAction.next,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Obx(
-              () => AuthField(
-                label: 'Confirmar Contraseña',
-                controller: controller.confirmParams,
-                icon: Icons.enhanced_encryption_outlined,
-                hint: '••••••••',
-                isPassword: true,
-                isPasswordVisible: controller.isPasswordVisible.value,
-                onTogglePassword: controller.togglePasswordVisibility,
-                autofillHints: const [AutofillHints.newPassword],
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => controller.doRegister(),
-              ),
-            ),
+            const SizedBox(height: 20),
 
+            // Password grid 2 col en desktop, stack mobile
+            if (isMobile) ...[
+              _RegLabel('Contraseña'),
+              const SizedBox(height: 6),
+              Obx(
+                () => _RegField(
+                  controller: controller.passParams,
+                  icon: Icons.lock_outline_rounded,
+                  hint: '••••••••',
+                  isPassword: true,
+                  isPasswordVisible: controller.isPasswordVisible.value,
+                  onTogglePassword: controller.togglePasswordVisibility,
+                  autofillHints: const [AutofillHints.newPassword],
+                ),
+              ),
+              const SizedBox(height: 20),
+              _RegLabel('Confirmar contraseña'),
+              const SizedBox(height: 6),
+              Obx(
+                () => _RegField(
+                  controller: controller.confirmParams,
+                  icon: Icons.enhanced_encryption_outlined,
+                  hint: '••••••••',
+                  isPassword: true,
+                  isPasswordVisible: controller.isPasswordVisible.value,
+                  onTogglePassword: controller.togglePasswordVisibility,
+                  autofillHints: const [AutofillHints.newPassword],
+                ),
+              ),
+            ] else ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _RegLabel('Contraseña'),
+                        const SizedBox(height: 6),
+                        Obx(
+                          () => _RegField(
+                            controller: controller.passParams,
+                            icon: Icons.lock_outline_rounded,
+                            hint: '••••••••',
+                            isPassword: true,
+                            isPasswordVisible:
+                                controller.isPasswordVisible.value,
+                            onTogglePassword:
+                                controller.togglePasswordVisibility,
+                            autofillHints: const [AutofillHints.newPassword],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _RegLabel('Confirmar'),
+                        const SizedBox(height: 6),
+                        Obx(
+                          () => _RegField(
+                            controller: controller.confirmParams,
+                            icon: Icons.enhanced_encryption_outlined,
+                            hint: '••••••••',
+                            isPassword: true,
+                            isPasswordVisible:
+                                controller.isPasswordVisible.value,
+                            onTogglePassword:
+                                controller.togglePasswordVisibility,
+                            autofillHints: const [AutofillHints.newPassword],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 18),
 
             // Terms
@@ -360,8 +524,8 @@ class _RegisterCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 22,
-                    height: 22,
+                    width: 20,
+                    height: 20,
                     child: Checkbox(
                       value: controller.acceptedTerms.value,
                       onChanged: (v) =>
@@ -370,7 +534,7 @@ class _RegisterCard extends StatelessWidget {
                       materialTapTargetSize:
                           MaterialTapTargetSize.shrinkWrap,
                       activeColor: AppTheme.primary,
-                      side: const BorderSide(color: AppTheme.borderLight),
+                      side: const BorderSide(color: Color(0xFFE2E0F7)),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -378,8 +542,8 @@ class _RegisterCard extends StatelessWidget {
                     child: RichText(
                       text: const TextSpan(
                         style: TextStyle(
-                          fontSize: 12.5,
-                          height: 1.4,
+                          fontSize: 13,
+                          height: 1.45,
                           color: AppTheme.textSecondary,
                         ),
                         children: [
@@ -407,9 +571,9 @@ class _RegisterCard extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
 
-            const SizedBox(height: 20),
-
+            // CTA
             SizedBox(
               height: 52,
               child: Obx(
@@ -422,10 +586,9 @@ class _RegisterCard extends StatelessWidget {
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    disabledBackgroundColor:
-                        AppTheme.primary.withValues(alpha: 0.5),
+                    shadowColor: AppTheme.primary.withValues(alpha: 0.2),
                   ),
                   child: controller.isLoading.value
                       ? const SizedBox(
@@ -438,26 +601,150 @@ class _RegisterCard extends StatelessWidget {
                         )
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
+                          children: const [
                             Text(
-                              AppL10n.of(context).authRegisterButton,
-                              style: const TextStyle(
+                              'Crear Cuenta',
+                              style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.2,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            const Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 18,
-                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward_rounded, size: 18),
                           ],
                         ),
                 ),
               ),
             ),
+            const SizedBox(height: 24),
+
+            // Footer link login
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '¿Ya tienes ${isMobile ? "cuenta" : "una cuenta"}?',
+                    style: const TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 14.5,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Get.back(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      isMobile ? 'Entrar' : 'Inicia sesión',
+                      style: const TextStyle(
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RegLabel extends StatelessWidget {
+  final String text;
+  // ignore: unused_element_parameter
+  const _RegLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppTheme.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _RegField extends StatelessWidget {
+  final TextEditingController controller;
+  final IconData icon;
+  final String hint;
+  final bool isPassword;
+  final bool isPasswordVisible;
+  final VoidCallback? onTogglePassword;
+  final List<String>? autofillHints;
+  final TextInputType keyboardType;
+
+  const _RegField({
+    required this.controller,
+    required this.icon,
+    required this.hint,
+    this.isPassword = false,
+    this.isPasswordVisible = false,
+    this.onTogglePassword,
+    this.autofillHints,
+    this.keyboardType = TextInputType.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E0F7), width: 1),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: isPassword && !isPasswordVisible,
+        keyboardType: keyboardType,
+        autofillHints: autofillHints,
+        style: const TextStyle(
+          color: Color(0xFF1A1C1C),
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          hintText: hint,
+          hintStyle: const TextStyle(
+            color: Color(0xFF7B7487),
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(icon, size: 20, color: const Color(0xFF7B7487)),
+          prefixIconConstraints:
+              const BoxConstraints(minWidth: 44, minHeight: 44),
+          suffixIcon: isPassword
+              ? IconButton(
+                  icon: Icon(
+                    isPasswordVisible
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    size: 20,
+                    color: const Color(0xFF7B7487),
+                  ),
+                  onPressed: onTogglePassword,
+                )
+              : null,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
         ),
       ),
     );

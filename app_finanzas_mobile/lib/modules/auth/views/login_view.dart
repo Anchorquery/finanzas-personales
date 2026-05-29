@@ -104,9 +104,9 @@ class _MobileLogin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 48),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 48),
+      child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: Column(
@@ -116,7 +116,7 @@ class _MobileLogin extends StatelessWidget {
               Column(
                 children: const [
                   Text(
-                    'Finanzas Personales',
+                    'FinVault',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 24,
@@ -351,9 +351,9 @@ class _DesktopLogin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+      child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
           child: Column(
@@ -384,7 +384,7 @@ class _DesktopLogin extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Finanzas Personales',
+                    'FinVault',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,

@@ -163,7 +163,7 @@ class _MobileRegister extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               const Text(
-                'Finanzas Personales',
+                'FinVault',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -203,9 +203,9 @@ class _DesktopRegister extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+      child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Row(
@@ -235,7 +235,7 @@ class _DesktopRegister extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           const Text(
-                            'Finanzas Personales',
+                            'FinVault',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,

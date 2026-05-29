@@ -61,9 +61,9 @@ class _WelcomeMobile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 540),
           child: Container(
@@ -209,9 +209,9 @@ class _WelcomeDesktop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(32),
+      child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1120),
           child: ClipRRect(
@@ -270,7 +270,7 @@ class _WelcomeDesktop extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 8),
                                   const Text(
-                                    'Finanzas Personales',
+                                    'FinVault',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w700,
@@ -527,7 +527,7 @@ class _WorkspaceMobile extends StatelessWidget {
               const SizedBox(height: 32),
               // Header
               const Text(
-                '¿Para qué vas a usar Finanzas Personales?',
+                '¿Para qué vas a usar FinVault?',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -647,7 +647,7 @@ class _WorkspaceDesktop extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               const Text(
-                'Finanzas Personales',
+                'FinVault',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -703,7 +703,7 @@ class _WorkspaceDesktop extends StatelessWidget {
                     const SizedBox(height: 48),
                     // Title
                     const Text(
-                      '¿Para qué vas a usar Finanzas Personales?',
+                      '¿Para qué vas a usar FinVault?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 42,
@@ -862,7 +862,7 @@ class _BalanceMobile extends StatelessWidget {
           child: Row(
             children: [
               const Text(
-                'Finanzas Personales',
+                'FinVault',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -967,9 +967,9 @@ class _BalanceDesktop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(32),
+      child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 700),
           child: Column(
@@ -1197,7 +1197,7 @@ class _PowersMobile extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               const Text(
-                'Finanzas Personales',
+                'FinVault',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,

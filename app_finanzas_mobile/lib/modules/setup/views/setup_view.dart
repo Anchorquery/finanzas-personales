@@ -339,7 +339,6 @@ class _WorkspaceStep extends StatelessWidget {
           controller: controller.workspaceNameController,
           icon: Icons.workspaces_outline,
           hint: 'Ej: Principal, Casa, Empresa…',
-          isDark: isDark,
         ),
         const SizedBox(height: 18),
         Text(
@@ -653,7 +652,6 @@ class _BalanceStep extends StatelessWidget {
           controller: controller.accountNameController,
           icon: Icons.account_balance_wallet_outlined,
           hint: 'Ej: Billetera, BBVA…',
-          isDark: isDark,
         ),
         const SizedBox(height: 22),
         Container(

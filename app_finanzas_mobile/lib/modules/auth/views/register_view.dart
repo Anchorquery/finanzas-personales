@@ -104,12 +104,11 @@ class RegisterView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(RegisterController());
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AuthScaffold(
       child: Column(
         children: [
-          _GlassHeader(isDark: isDark),
+          const _GlassHeader(),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(
@@ -122,19 +121,16 @@ class RegisterView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _RegisterCard(
-                          controller: controller, isDark: isDark),
+                      _RegisterCard(controller: controller),
                       const SizedBox(height: 18),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             AppL10n.of(context).authRegisterHaveAccount,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14.5,
-                              color: isDark
-                                  ? Colors.white60
-                                  : AppTheme.textSecondary,
+                              color: AppTheme.textSecondary,
                             ),
                           ),
                           TextButton(
@@ -165,9 +161,7 @@ class RegisterView extends StatelessWidget {
                           Icon(
                             Icons.verified_user_outlined,
                             size: 13,
-                            color: (isDark
-                                    ? Colors.white
-                                    : AppTheme.textSecondary)
+                            color: AppTheme.textSecondary
                                 .withValues(alpha: 0.4),
                           ),
                           const SizedBox(width: 6),
@@ -177,9 +171,7 @@ class RegisterView extends StatelessWidget {
                               fontSize: 10.5,
                               letterSpacing: 1.6,
                               fontWeight: FontWeight.w600,
-                              color: (isDark
-                                      ? Colors.white
-                                      : AppTheme.textSecondary)
+                              color: AppTheme.textSecondary
                                   .withValues(alpha: 0.4),
                             ),
                           ),
@@ -200,8 +192,7 @@ class RegisterView extends StatelessWidget {
 // ────────────────────────────────────────────────────────────────────────────
 
 class _GlassHeader extends StatelessWidget {
-  final bool isDark;
-  const _GlassHeader({required this.isDark});
+  const _GlassHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -209,15 +200,9 @@ class _GlassHeader extends StatelessWidget {
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.black.withValues(alpha: 0.30)
-            : Colors.white.withValues(alpha: 0.75),
-        border: Border(
-          bottom: BorderSide(
-            color: isDark
-                ? const Color(0x14FFFFFF)
-                : const Color(0x14000000),
-          ),
+        color: Colors.white.withValues(alpha: 0.75),
+        border: const Border(
+          bottom: BorderSide(color: Color(0x14000000)),
         ),
       ),
       child: Row(
@@ -236,7 +221,7 @@ class _GlassHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Text(
+          const Text(
             'Finanzas Personales',
             style: TextStyle(
               fontSize: 16,
@@ -256,16 +241,14 @@ class _GlassHeader extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  color: isDark
-                      ? const Color(0x14FFFFFF)
-                      : const Color(0xFFF1F0FB),
+                  color: const Color(0xFFF1F0FB),
                 ),
-                child: Text(
+                child: const Text(
                   'Entrar',
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white70 : AppTheme.primary,
+                    color: AppTheme.primary,
                   ),
                 ),
               ),
@@ -281,27 +264,19 @@ class _GlassHeader extends StatelessWidget {
 
 class _RegisterCard extends StatelessWidget {
   final RegisterController controller;
-  final bool isDark;
-  const _RegisterCard(
-      {required this.controller, required this.isDark});
+  const _RegisterCard({required this.controller});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.surfaceDark : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark
-              ? const Color(0x14FFFFFF)
-              : const Color(0xFFF1F0FB),
-        ),
+        border: Border.all(color: const Color(0xFFF1F0FB)),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.25)
-                : Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 30,
             offset: const Offset(0, 18),
           ),
@@ -311,21 +286,20 @@ class _RegisterCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            const Text(
               'Comienza tu viaje',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF1A1C1C),
+                color: Color(0xFF1A1C1C),
               ),
             ),
             const SizedBox(height: 6),
-            Text(
+            const Text(
               'Crea tu cuenta y toma el control de tus finanzas.',
               style: TextStyle(
                 fontSize: 14,
-                color:
-                    isDark ? Colors.white60 : AppTheme.textSecondary,
+                color: AppTheme.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -335,7 +309,6 @@ class _RegisterCard extends StatelessWidget {
               controller: controller.nameParams,
               icon: Icons.person_outline_rounded,
               hint: 'Ej. Daniel García',
-              isDark: isDark,
               autofillHints: const [AutofillHints.name],
               textInputAction: TextInputAction.next,
             ),
@@ -345,7 +318,6 @@ class _RegisterCard extends StatelessWidget {
               controller: controller.emailParams,
               icon: Icons.mail_outline_rounded,
               hint: 'nombre@ejemplo.com',
-              isDark: isDark,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
               textInputAction: TextInputAction.next,
@@ -357,7 +329,6 @@ class _RegisterCard extends StatelessWidget {
                 controller: controller.passParams,
                 icon: Icons.lock_outline_rounded,
                 hint: 'Mínimo 8 caracteres',
-                isDark: isDark,
                 isPassword: true,
                 isPasswordVisible: controller.isPasswordVisible.value,
                 onTogglePassword: controller.togglePasswordVisibility,
@@ -372,7 +343,6 @@ class _RegisterCard extends StatelessWidget {
                 controller: controller.confirmParams,
                 icon: Icons.enhanced_encryption_outlined,
                 hint: '••••••••',
-                isDark: isDark,
                 isPassword: true,
                 isPasswordVisible: controller.isPasswordVisible.value,
                 onTogglePassword: controller.togglePasswordVisibility,
@@ -400,25 +370,19 @@ class _RegisterCard extends StatelessWidget {
                       materialTapTargetSize:
                           MaterialTapTargetSize.shrinkWrap,
                       activeColor: AppTheme.primary,
-                      side: BorderSide(
-                        color: isDark
-                            ? Colors.white24
-                            : AppTheme.borderLight,
-                      ),
+                      side: const BorderSide(color: AppTheme.borderLight),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: RichText(
-                      text: TextSpan(
+                      text: const TextSpan(
                         style: TextStyle(
                           fontSize: 12.5,
                           height: 1.4,
-                          color: isDark
-                              ? Colors.white70
-                              : AppTheme.textSecondary,
+                          color: AppTheme.textSecondary,
                         ),
-                        children: const [
+                        children: [
                           TextSpan(text: 'Acepto los '),
                           TextSpan(
                             text: 'Términos y Condiciones',

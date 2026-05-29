@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// Campo de auth con etiqueta opcional encima e icono prefix.
-/// Estilo violet fintech (bordeado, no `filled`).
+/// Estilo violet fintech LIGHT (bordeado, no `filled`).
+/// Diseñado para usar dentro de [AuthScaffold] que fuerza tema light.
 class AuthField extends StatelessWidget {
   final TextEditingController controller;
   final IconData icon;
   final String hint;
   final String? label;
-  final bool isDark;
   final bool isPassword;
   final bool isPasswordVisible;
   final VoidCallback? onTogglePassword;
@@ -22,7 +22,6 @@ class AuthField extends StatelessWidget {
     required this.controller,
     required this.icon,
     required this.hint,
-    required this.isDark,
     this.label,
     this.isPassword = false,
     this.isPasswordVisible = false,
@@ -35,14 +34,10 @@ class AuthField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fill = isDark
-        ? const Color(0xFF13161F)
-        : Colors.white;
-    final border = isDark
-        ? const Color(0x22FFFFFF)
-        : const Color(0xFFE2E0F7);
-    final iconColor = isDark ? Colors.white54 : AppTheme.textHint;
-    final textColor = isDark ? Colors.white : const Color(0xFF1A1C1C);
+    const fill = Colors.white;
+    const border = Color(0xFFE2E0F7);
+    const iconColor = AppTheme.textHint;
+    const textColor = Color(0xFF1A1C1C);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,10 +45,10 @@ class AuthField extends StatelessWidget {
         if (label != null) ...[
           Text(
             label!,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white70 : AppTheme.textSecondary,
+              color: AppTheme.textSecondary,
             ),
           ),
           const SizedBox(height: 6),
@@ -72,7 +67,7 @@ class AuthField extends StatelessWidget {
             textInputAction: textInputAction,
             onSubmitted: onSubmitted,
             autofillHints: autofillHints,
-            style: TextStyle(
+            style: const TextStyle(
               color: textColor,
               fontSize: 14.5,
               fontWeight: FontWeight.w500,
@@ -84,7 +79,7 @@ class AuthField extends StatelessWidget {
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
               hintText: hint,
-              hintStyle: TextStyle(
+              hintStyle: const TextStyle(
                 color: iconColor,
                 fontSize: 14,
               ),
@@ -101,9 +96,7 @@ class AuthField extends StatelessWidget {
                         color: iconColor,
                       ),
                       onPressed: onTogglePassword,
-                      tooltip: isPasswordVisible
-                          ? 'Ocultar'
-                          : 'Mostrar',
+                      tooltip: isPasswordVisible ? 'Ocultar' : 'Mostrar',
                     )
                   : null,
               contentPadding:

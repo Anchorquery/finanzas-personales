@@ -1,62 +1,58 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 
-/// Fondo común para Login / Registro / Recuperación.
-/// - Light: blanco roto con radial violet glow + dos blobs blur.
-/// - Dark: backgroundDark con halos primary suaves.
+/// Fondo común para Login / Registro / Recuperación / Onboarding.
+/// Fuerza tema LIGHT (per DESIGN.md auth flow = light only).
+/// Blanco roto con radial violet glow + dos blobs blur.
 class AuthScaffold extends StatelessWidget {
   final Widget child;
   const AuthScaffold({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor:
-          isDark ? AppTheme.backgroundDark : const Color(0xFFF8FAFC),
-      body: Stack(
-        children: [
-          // Radial central
-          Positioned.fill(
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    radius: 0.85,
-                    colors: [
-                      AppTheme.primary.withValues(
-                        alpha: isDark ? 0.10 : 0.06,
-                      ),
-                      Colors.transparent,
-                    ],
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: Stack(
+          children: [
+            // Radial central
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      radius: 0.85,
+                      colors: [
+                        AppTheme.primary.withValues(alpha: 0.06),
+                        Colors.transparent,
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          // Blob top-left
-          Positioned(
-            top: -120,
-            left: -120,
-            child: _Blob(
-              size: 360,
-              color:
-                  AppTheme.primary.withValues(alpha: isDark ? 0.18 : 0.10),
+            // Blob top-left
+            Positioned(
+              top: -120,
+              left: -120,
+              child: _Blob(
+                size: 360,
+                color: AppTheme.primary.withValues(alpha: 0.10),
+              ),
             ),
-          ),
-          // Blob bottom-right
-          Positioned(
-            bottom: -140,
-            right: -140,
-            child: _Blob(
-              size: 420,
-              color: AppTheme.accentAI
-                  .withValues(alpha: isDark ? 0.15 : 0.08),
+            // Blob bottom-right
+            Positioned(
+              bottom: -140,
+              right: -140,
+              child: _Blob(
+                size: 420,
+                color: AppTheme.accentAI.withValues(alpha: 0.08),
+              ),
             ),
-          ),
-          SafeArea(child: child),
-        ],
+            SafeArea(child: child),
+          ],
+        ),
       ),
     );
   }

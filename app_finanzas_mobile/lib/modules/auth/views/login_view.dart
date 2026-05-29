@@ -73,7 +73,6 @@ class LoginView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(LoginController());
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AuthScaffold(
       child: LayoutBuilder(
@@ -91,19 +90,17 @@ class LoginView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _BrandHeader(isDark: isDark),
+                    const _BrandHeader(),
                     const SizedBox(height: 28),
-                    _LoginCard(controller: controller, isDark: isDark),
+                    _LoginCard(controller: controller),
                     const SizedBox(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           AppL10n.of(context).authLoginNoAccount,
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.white60
-                                : AppTheme.textSecondary,
+                          style: const TextStyle(
+                            color: AppTheme.textSecondary,
                             fontSize: 15,
                           ),
                         ),
@@ -136,9 +133,7 @@ class LoginView extends StatelessWidget {
                           Icon(
                             Icons.verified_user_outlined,
                             size: 14,
-                            color: (isDark
-                                    ? Colors.white
-                                    : AppTheme.textSecondary)
+                            color: AppTheme.textSecondary
                                 .withValues(alpha: 0.5),
                           ),
                           const SizedBox(width: 6),
@@ -147,9 +142,7 @@ class LoginView extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               letterSpacing: 1.2,
-                              color: (isDark
-                                      ? Colors.white
-                                      : AppTheme.textSecondary)
+                              color: AppTheme.textSecondary
                                   .withValues(alpha: 0.5),
                               fontWeight: FontWeight.w600,
                             ),
@@ -171,8 +164,7 @@ class LoginView extends StatelessWidget {
 // ────────────────────────────────────────────────────────────────────────────
 
 class _BrandHeader extends StatelessWidget {
-  final bool isDark;
-  const _BrandHeader({required this.isDark});
+  const _BrandHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -199,22 +191,21 @@ class _BrandHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Text(
+        const Text(
           'Finanzas Personales',
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
-            color: isDark ? Colors.white : const Color(0xFF1A1C1C),
+            color: Color(0xFF1A1C1C),
           ),
         ),
         const SizedBox(height: 6),
-        Text(
+        const Text(
           'Accede a tu libertad financiera',
           style: TextStyle(
             fontSize: 14,
-            color:
-                isDark ? Colors.white70 : AppTheme.textSecondary,
+            color: AppTheme.textSecondary,
           ),
         ),
       ],
@@ -226,28 +217,19 @@ class _BrandHeader extends StatelessWidget {
 
 class _LoginCard extends StatelessWidget {
   final LoginController controller;
-  final bool isDark;
-  const _LoginCard({required this.controller, required this.isDark});
+  const _LoginCard({required this.controller});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppTheme.surfaceDark
-            : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark
-              ? const Color(0x14FFFFFF)
-              : const Color(0xFFF1F0FB),
-        ),
+        border: Border.all(color: const Color(0xFFF1F0FB)),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.25)
-                : const Color(0xFF630ED4).withValues(alpha: 0.08),
+            color: const Color(0xFF630ED4).withValues(alpha: 0.08),
             blurRadius: 40,
             offset: const Offset(0, 20),
           ),
@@ -257,12 +239,12 @@ class _LoginCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            const Text(
               'Bienvenido de nuevo',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : const Color(0xFF1A1C1C),
+                color: Color(0xFF1A1C1C),
               ),
             ),
             const SizedBox(height: 22),
@@ -273,7 +255,6 @@ class _LoginCard extends StatelessWidget {
               controller: controller.emailParams,
               icon: Icons.mail_outline_rounded,
               hint: 'nombre@ejemplo.com',
-              isDark: isDark,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
               textInputAction: TextInputAction.next,
@@ -284,14 +265,12 @@ class _LoginCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Contraseña',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? Colors.white70
-                        : AppTheme.textSecondary,
+                    color: AppTheme.textSecondary,
                   ),
                 ),
                 MouseRegion(
@@ -317,7 +296,6 @@ class _LoginCard extends StatelessWidget {
                 controller: controller.passParams,
                 icon: Icons.lock_outline_rounded,
                 hint: '••••••••',
-                isDark: isDark,
                 isPassword: true,
                 isPasswordVisible: controller.isPasswordVisible.value,
                 onTogglePassword: controller.togglePasswordVisibility,
@@ -342,22 +320,16 @@ class _LoginCard extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                       materialTapTargetSize:
                           MaterialTapTargetSize.shrinkWrap,
-                      side: BorderSide(
-                        color: isDark
-                            ? Colors.white24
-                            : AppTheme.borderLight,
-                      ),
+                      side: const BorderSide(color: AppTheme.borderLight),
                       activeColor: AppTheme.primary,
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text(
+                  const Text(
                     'Recordarme en este dispositivo',
                     style: TextStyle(
                       fontSize: 12.5,
-                      color: isDark
-                          ? Colors.white70
-                          : AppTheme.textSecondary,
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                 ],
@@ -404,7 +376,7 @@ class _LoginCard extends StatelessWidget {
             ),
 
             const SizedBox(height: 22),
-            _Divider(isDark: isDark, text: 'O CONTINÚA CON'),
+            const _Divider(text: 'O CONTINÚA CON'),
             const SizedBox(height: 18),
 
             // Google + Bio (bio = placeholder visual)
@@ -412,7 +384,6 @@ class _LoginCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _SecondaryAuthBtn(
-                    isDark: isDark,
                     onPressed: controller.doGoogleLogin,
                     iconWidget: const Icon(
                       Icons.g_mobiledata_rounded,
@@ -425,7 +396,6 @@ class _LoginCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _SecondaryAuthBtn(
-                    isDark: isDark,
                     onPressed: () {
                       HapticFeedback.lightImpact();
                       SnackbarService.showWarning(
@@ -453,15 +423,12 @@ class _LoginCard extends StatelessWidget {
 // ────────────────────────────────────────────────────────────────────────────
 
 class _Divider extends StatelessWidget {
-  final bool isDark;
   final String text;
-  const _Divider({required this.isDark, required this.text});
+  const _Divider({required this.text});
 
   @override
   Widget build(BuildContext context) {
-    final color = isDark
-        ? const Color(0x33FFFFFF)
-        : const Color(0xFFEDEAF6);
+    const color = Color(0xFFEDEAF6);
     return Row(
       children: [
         Expanded(child: Container(height: 1, color: color)),
@@ -469,13 +436,11 @@ class _Divider extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Text(
             text,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
               letterSpacing: 1.5,
               fontWeight: FontWeight.w600,
-              color: isDark
-                  ? Colors.white38
-                  : AppTheme.textHint,
+              color: AppTheme.textHint,
             ),
           ),
         ),
@@ -486,13 +451,11 @@ class _Divider extends StatelessWidget {
 }
 
 class _SecondaryAuthBtn extends StatelessWidget {
-  final bool isDark;
   final VoidCallback onPressed;
   final Widget iconWidget;
   final String label;
 
   const _SecondaryAuthBtn({
-    required this.isDark,
     required this.onPressed,
     required this.iconWidget,
     required this.label,
@@ -507,20 +470,15 @@ class _SecondaryAuthBtn extends StatelessWidget {
         icon: iconWidget,
         label: Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : const Color(0xFF1A1C1C),
+            color: Color(0xFF1A1C1C),
           ),
         ),
         style: OutlinedButton.styleFrom(
-          backgroundColor:
-              isDark ? const Color(0x12FFFFFF) : Colors.white,
-          side: BorderSide(
-            color: isDark
-                ? const Color(0x22FFFFFF)
-                : const Color(0xFFE2E0F7),
-          ),
+          backgroundColor: Colors.white,
+          side: const BorderSide(color: Color(0xFFE2E0F7)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

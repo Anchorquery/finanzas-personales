@@ -8,23 +8,92 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
 
   <!-- SEO / descripción -->
-  <meta name="description" content="Finanzas Personales — Gestiona tus ahorros, gastos, ingresos y presupuestos con IA.">
-  <meta name="theme-color" content="#0F172A">
+  <meta name="description" content="FinVault — Gestión financiera premium con IA: ahorros, gastos, ingresos y presupuestos.">
+  <meta name="theme-color" content="#F8FAFC">
 
   <!-- PWA / iOS -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Finanzas">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="FinVault">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>Finanzas Personales</title>
+  <title>FinVault</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Splash screen (visible mientras Flutter descarga main.dart.js) -->
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #F8FAFC; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; }
+
+    #finvault-splash {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 24px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(124,58,237,0.06) 0%, rgba(248,250,252,0) 70%),
+        #F8FAFC;
+      z-index: 9999;
+      transition: opacity .4s ease;
+    }
+    #finvault-splash.hide { opacity: 0; pointer-events: none; }
+
+    .fv-logo {
+      width: 64px; height: 64px;
+      background: #7C3AED;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 12px 28px rgba(124,58,237,0.30);
+    }
+    .fv-logo svg { width: 32px; height: 32px; fill: #FFFFFF; }
+
+    .fv-title {
+      color: #1A1C1C; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;
+    }
+    .fv-subtitle {
+      color: #4A4455; font-size: 13px; margin-top: -16px;
+    }
+
+    .fv-spinner {
+      width: 28px; height: 28px;
+      border: 3px solid rgba(124,58,237,0.18);
+      border-top-color: #7C3AED;
+      border-radius: 50%;
+      animation: fv-spin .9s linear infinite;
+    }
+    @keyframes fv-spin { to { transform: rotate(360deg); } }
+
+    /* Blobs decorativos */
+    .fv-blob {
+      position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none;
+    }
+    .fv-blob.tl { top: -120px; left: -120px; width: 360px; height: 360px; background: rgba(124,58,237,0.18); }
+    .fv-blob.br { bottom: -140px; right: -140px; width: 420px; height: 420px; background: rgba(139,92,246,0.15); }
+  </style>
 </head>
 <body>
+  <div id="finvault-splash">
+    <div class="fv-blob tl"></div>
+    <div class="fv-blob br"></div>
+    <div class="fv-logo">
+      <svg viewBox="0 0 24 24"><path d="M21 7H3c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm0 12H3V9h18v10zM18 5H6V3h12v2zm-1 11c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+    </div>
+    <div class="fv-title">FinVault</div>
+    <div class="fv-subtitle">Cargando tu espacio financiero…</div>
+    <div class="fv-spinner"></div>
+  </div>
+
+  <script>
+    // Ocultar splash al primer frame de Flutter.
+    window.addEventListener('flutter-first-frame', function () {
+      var s = document.getElementById('finvault-splash');
+      if (!s) return;
+      s.classList.add('hide');
+      setTimeout(function () { s.remove(); }, 500);
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

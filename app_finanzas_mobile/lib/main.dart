@@ -102,7 +102,7 @@ class MyApp extends StatelessWidget {
     final initialThemeMode = ThemeMode.values[themeIndex.clamp(0, 2)];
 
     return GetMaterialApp(
-      title: 'Finanzas Personales',
+      title: 'FinVault',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: initialThemeMode,

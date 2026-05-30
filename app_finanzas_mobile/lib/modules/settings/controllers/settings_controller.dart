@@ -53,12 +53,12 @@ class SettingsController extends GetxController {
   }
 
   void _loadPersistedPreferences() {
-    final themeIndex = _storage.read<int>('theme_mode') ?? 0;
-    currentThemeMode.value = ThemeMode.values[themeIndex];
+    // LIGHT ONLY (DESIGN.md): app solo claro; no restaurar tema guardado.
+    currentThemeMode.value = ThemeMode.light;
     notificationsEnabled.value =
         _storage.read<bool>('notifications_enabled') ?? true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.changeThemeMode(currentThemeMode.value);
+      Get.changeThemeMode(ThemeMode.light);
     });
   }
 

@@ -97,6 +97,7 @@ class AICoachController extends GetxController {
   final isConfigured = false.obs;
   final isInitializing = true.obs;
   final isRefreshingContext = false.obs;
+  final isConfiguringApi = false.obs;
   final contextSummary = ''.obs;
   final currentModel = 'gemini-2.5-flash'.obs;
 
@@ -119,13 +120,8 @@ class AICoachController extends GetxController {
 
   static const _maxConversationTurns = 20;
   static const _modelName = 'gemini-2.5-flash';
-  static const flashModel = 'gemini-2.5-flash';
-  static const proModel = 'gemini-2.5-pro';
   static const _localApiKeyStorageKey = 'ai_gemini_key_cached';
-  static const _localModelStorageKey = 'ai_gemini_model';
   static const _maxAgentIterations = 8;
-
-  bool get isConfiguredValue => isConfigured.value;
 
   String get _workspaceId {
     if (Get.isRegistered<WorkspacesController>()) {
@@ -251,6 +247,58 @@ class AICoachController extends GetxController {
 
   void invalidateApiKeyCache() {
     _storage.remove(_localApiKeyStorageKey);
+  }
+
+  /// Onboarding embebido: guarda la API key (cache local + settings de la
+  /// organización), inicializa el modelo y deja el coach listo.
+  Future<bool> configureApiKey(String rawKey) async {
+    final key = rawKey.trim();
+    if (key.isEmpty) return false;
+    if (isConfiguringApi.value) return false;
+
+    isConfiguringApi.value = true;
+    try {
+      _storage.write(_localApiKeyStorageKey, key);
+      _cachedApiKey = key;
+
+      try {
+        final org = await _directusService.getOrganization();
+        if (org != null) {
+          final existing =
+              await _directusService.getOrganizationSettings(org.id);
+          if (existing == null) {
+            await _directusService.createOrganizationSettings(
+              org.id,
+              apiKey: key,
+              aiEnabled: true,
+            );
+          } else {
+            await _directusService.updateOrganizationSettings(
+              existing['id'].toString(),
+              {'gemini_api_key': key, 'ai_enabled': true},
+            );
+          }
+        }
+      } catch (e) {
+        Get.log('AICoachController: persist api key warning: $e');
+      }
+
+      await _setupChatModel(key);
+      isConfigured.value = true;
+      if (messages.isEmpty) {
+        _addWelcomeMessage();
+      }
+      return true;
+    } catch (e, st) {
+      Get.log('AICoachController: configureApiKey error: $e');
+      _captureSentry(e, st, tag: 'configure_api_key');
+      isConfigured.value = false;
+      invalidateApiKeyCache();
+      _cachedApiKey = null;
+      return false;
+    } finally {
+      isConfiguringApi.value = false;
+    }
   }
 
   Future<void> _setupChatModel(String apiKey) async {

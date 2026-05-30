@@ -1332,7 +1332,7 @@ class _AgentPanel extends StatelessWidget {
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: todos.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, i) => _TodoRow(todo: todos[i]),
                 );
               }),

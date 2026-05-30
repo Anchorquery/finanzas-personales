@@ -1470,9 +1470,29 @@ class _PanelContextSnapshot extends StatelessWidget {
 // INPUT BAR
 // ════════════════════════════════════════════════════════════════════════
 
-class _InputBar extends StatelessWidget {
+class _InputBar extends StatefulWidget {
   final AICoachController controller;
   const _InputBar({required this.controller});
+
+  @override
+  State<_InputBar> createState() => _InputBarState();
+}
+
+class _InputBarState extends State<_InputBar> {
+  final _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _send() {
+    final text = _ctrl.text;
+    if (text.trim().isEmpty) return;
+    widget.controller.sendMessage(text);
+    _ctrl.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1498,11 +1518,11 @@ class _InputBar extends StatelessWidget {
                   border: Border.all(color: _kInputBorder),
                 ),
                 child: TextField(
-                  controller: controller.textController,
+                  controller: _ctrl,
                   minLines: 1,
                   maxLines: 5,
                   textInputAction: TextInputAction.send,
-                  onSubmitted: (v) => controller.sendMessage(v),
+                  onSubmitted: (_) => _send(),
                   style: const TextStyle(fontSize: 14, color: _kInk),
                   decoration: const InputDecoration(
                     isCollapsed: true,
@@ -1517,9 +1537,8 @@ class _InputBar extends StatelessWidget {
             const SizedBox(width: 10),
             Obx(
               () => _SendButton(
-                busy: controller.isTyping.value,
-                onTap: () =>
-                    controller.sendMessage(controller.textController.text),
+                busy: widget.controller.isTyping.value,
+                onTap: _send,
               ),
             ),
           ],

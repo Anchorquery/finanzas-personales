@@ -92,7 +92,6 @@ class AIChatMessage {
 
 class AICoachController extends GetxController {
   final messages = <AIChatMessage>[].obs;
-  final textController = TextEditingController();
   final isTyping = false.obs;
   final isConfigured = false.obs;
   final isInitializing = true.obs;
@@ -120,8 +119,17 @@ class AICoachController extends GetxController {
 
   static const _maxConversationTurns = 20;
   static const _modelName = 'gemini-2.5-flash';
+  static const flashModel = 'gemini-2.5-flash';
+  static const proModel = 'gemini-2.5-pro';
   static const _localApiKeyStorageKey = 'ai_gemini_key_cached';
+  static const _localModelStorageKey = 'ai_gemini_model';
   static const _maxAgentIterations = 8;
+
+  String get _preferredModel {
+    final stored = _storage.read<String>(_localModelStorageKey);
+    if (stored == flashModel || stored == proModel) return stored!;
+    return _modelName;
+  }
 
   String get _workspaceId {
     if (Get.isRegistered<WorkspacesController>()) {
@@ -251,7 +259,7 @@ class AICoachController extends GetxController {
 
   /// Onboarding embebido: guarda la API key (cache local + settings de la
   /// organización), inicializa el modelo y deja el coach listo.
-  Future<bool> configureApiKey(String rawKey) async {
+  Future<bool> configureApiKey(String rawKey, {String? model}) async {
     final key = rawKey.trim();
     if (key.isEmpty) return false;
     if (isConfiguringApi.value) return false;
@@ -259,6 +267,10 @@ class AICoachController extends GetxController {
     isConfiguringApi.value = true;
     try {
       _storage.write(_localApiKeyStorageKey, key);
+      if (model == flashModel || model == proModel) {
+        _storage.write(_localModelStorageKey, model);
+        currentModel.value = model!;
+      }
       _cachedApiKey = key;
 
       try {
@@ -302,21 +314,33 @@ class AICoachController extends GetxController {
   }
 
   Future<void> _setupChatModel(String apiKey) async {
+    final model = _preferredModel;
     _chatModel = ChatGoogleGenerativeAI(
       apiKey: apiKey,
       defaultOptions: ChatGoogleGenerativeAIOptions(
-        model: _modelName,
+        model: model,
         temperature: 0.6,
         tools: AgentToolSpecs.all,
       ),
     );
-    currentModel.value = _modelName;
+    currentModel.value = model;
 
     final context = await _buildFinancialContext();
     final systemPrompt = _buildSystemPrompt(context);
 
     _langchainHistory.clear();
     _langchainHistory.add(lc.ChatMessage.system(systemPrompt));
+  }
+
+  /// Cambia el modelo activo (Flash/Pro) y reconfigura si ya está listo.
+  Future<void> setModel(String model) async {
+    if (model != flashModel && model != proModel) return;
+    if (model == currentModel.value) return;
+    _storage.write(_localModelStorageKey, model);
+    currentModel.value = model;
+    if (isConfigured.value && _cachedApiKey != null) {
+      await _setupChatModel(_cachedApiKey!);
+    }
   }
 
   String _buildSystemPrompt(String context) => '''
@@ -595,7 +619,6 @@ REGLAS
   void sendMessage(String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty || isTyping.value) return;
-    textController.clear();
 
     // Clear ephemeral todos on new message
     agentTodos.clear();
@@ -1559,7 +1582,6 @@ REGLAS
 
   @override
   void onClose() {
-    textController.dispose();
     super.onClose();
   }
 }

@@ -103,14 +103,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeIndex = GetStorage().read<int>('theme_mode') ?? 2;
-    final initialThemeMode = ThemeMode.values[themeIndex.clamp(0, 2)];
-
+    // LIGHT ONLY (DESIGN.md): el rediseño violet fintech es solo claro.
+    // Forzar light evita que inputs/superficies hereden el tema oscuro
+    // del sistema operativo.
     return GetMaterialApp(
       title: 'FinVault',
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: initialThemeMode,
+      themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
       initialRoute: initialRoute,
       getPages: AppPages.routes,

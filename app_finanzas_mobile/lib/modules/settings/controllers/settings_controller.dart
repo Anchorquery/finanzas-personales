@@ -53,12 +53,12 @@ class SettingsController extends GetxController {
   }
 
   void _loadPersistedPreferences() {
-    // LIGHT ONLY (DESIGN.md): app solo en modo claro; ignorar tema guardado.
-    currentThemeMode.value = ThemeMode.light;
+    final themeIndex = _storage.read<int>('theme_mode') ?? 0;
+    currentThemeMode.value = ThemeMode.values[themeIndex];
     notificationsEnabled.value =
         _storage.read<bool>('notifications_enabled') ?? true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.changeThemeMode(ThemeMode.light);
+      Get.changeThemeMode(currentThemeMode.value);
     });
   }
 
@@ -94,10 +94,11 @@ class SettingsController extends GetxController {
     workspaceMembersCount.value = 1;
   }
 
+  // ignore: avoid_unused_constructor_parameters
   void toggleTheme(ThemeMode mode) {
-    Get.changeThemeMode(mode);
-    currentThemeMode.value = mode;
-    _storage.write('theme_mode', mode.index);
+    // LIGHT ONLY (DESIGN.md): tema fijo claro; el toggle queda inerte.
+    currentThemeMode.value = ThemeMode.light;
+    Get.changeThemeMode(ThemeMode.light);
   }
 
   void toggleNotifications(bool value) {

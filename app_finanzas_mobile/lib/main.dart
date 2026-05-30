@@ -18,6 +18,7 @@ import 'data/services/exchange_rate_service.dart';
 import 'data/services/quick_actions_service.dart';
 import 'data/services/voice_input_service.dart';
 import 'core/utils/currency_utils.dart';
+import 'core/utils/url_strategy.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -37,6 +38,7 @@ class AppScrollBehavior extends MaterialScrollBehavior {
 
 Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
+  usePathStrategy(); // URL sin `#` en web; no-op fuera de web.
   Get.log('--- [MAIN] INICIANDO APP ---');
 
   await initializeDateFormatting('es_ES', null);

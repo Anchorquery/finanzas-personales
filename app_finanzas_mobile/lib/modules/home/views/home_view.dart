@@ -35,6 +35,17 @@ class _HomeViewState extends State<HomeView> {
   late final HomeController controller;
   bool _sidebarCollapsed = false;
 
+  /// Cambia índice del shell + sincroniza URL del navegador.
+  /// Si la ruta ya es la actual, solo actualiza el índice (no-op para URL).
+  void _navTo(int index, String route) {
+    if (controller.currentIndex.value != index) {
+      controller.currentIndex.value = index;
+    }
+    if (Get.currentRoute != route) {
+      Get.offNamed(route);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -342,7 +353,7 @@ class _HomeViewState extends State<HomeView> {
                         label: 'Dashboard',
                         isActive: idx == HomeController.dashboardIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.dashboardIndex,
+                        onTap: () => _navTo(HomeController.dashboardIndex, Routes.home),
                       ),
                       _SidebarEntry(
                         icon: Icons.analytics_outlined,
@@ -356,7 +367,7 @@ class _HomeViewState extends State<HomeView> {
                         label: 'AI Coach',
                         isActive: idx == HomeController.coachIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.coachIndex,
+                        onTap: () => _navTo(HomeController.coachIndex, Routes.aiCoach),
                       ),
 
                       SizedBox(height: collapsed ? 8 : 0),
@@ -368,42 +379,42 @@ class _HomeViewState extends State<HomeView> {
                         label: 'Ingresos',
                         isActive: idx == HomeController.incomesIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.incomesIndex,
+                        onTap: () => _navTo(HomeController.incomesIndex, Routes.incomes),
                       ),
                       _SidebarEntry(
                         icon: Icons.receipt_long_rounded,
                         label: 'Gastos',
                         isActive: idx == HomeController.expensesIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.expensesIndex,
+                        onTap: () => _navTo(HomeController.expensesIndex, Routes.expenses),
                       ),
                       _SidebarEntry(
                         icon: Icons.pie_chart_rounded,
                         label: 'Presupuestos',
                         isActive: idx == HomeController.budgetsIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.budgetsIndex,
+                        onTap: () => _navTo(HomeController.budgetsIndex, Routes.budgets),
                       ),
                       _SidebarEntry(
                         icon: Icons.savings_rounded,
                         label: 'Ahorros',
                         isActive: idx == HomeController.savingsIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.savingsIndex,
+                        onTap: () => _navTo(HomeController.savingsIndex, Routes.savings),
                       ),
                       _SidebarEntry(
                         icon: Icons.money_off_rounded,
                         label: 'Deudas',
                         isActive: idx == HomeController.debtsIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.debtsIndex,
+                        onTap: () => _navTo(HomeController.debtsIndex, Routes.debts),
                       ),
                       _SidebarEntry(
                         icon: Icons.subscriptions_rounded,
                         label: 'Suscripciones',
                         isActive: idx == HomeController.subscriptionsIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.subscriptionsIndex,
+                        onTap: () => _navTo(HomeController.subscriptionsIndex, Routes.subscriptions),
                       ),
 
                       SizedBox(height: collapsed ? 8 : 0),
@@ -415,28 +426,28 @@ class _HomeViewState extends State<HomeView> {
                         label: 'Transacciones',
                         isActive: idx == HomeController.transactionsIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.transactionsIndex,
+                        onTap: () => _navTo(HomeController.transactionsIndex, Routes.transactions),
                       ),
                       _SidebarEntry(
                         icon: Icons.repeat_rounded,
                         label: 'Recurrentes',
                         isActive: idx == HomeController.recurringIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.recurringIndex,
+                        onTap: () => _navTo(HomeController.recurringIndex, Routes.recurring),
                       ),
                       _SidebarEntry(
                         icon: Icons.flight_takeoff_rounded,
                         label: 'Eventos',
                         isActive: idx == HomeController.eventsIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.eventsIndex,
+                        onTap: () => _navTo(HomeController.eventsIndex, Routes.events),
                       ),
                       _SidebarEntry(
                         icon: Icons.workspaces_rounded,
                         label: 'Workspaces',
                         isActive: idx == HomeController.workspacesIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.workspacesIndex,
+                        onTap: () => _navTo(HomeController.workspacesIndex, Routes.workspaces),
                       ),
 
                       SizedBox(height: collapsed ? 8 : 0),
@@ -455,14 +466,14 @@ class _HomeViewState extends State<HomeView> {
                         label: 'Organización',
                         isActive: false,
                         collapsed: collapsed,
-                        onTap: () => Get.toNamed('/organization-details'),
+                        onTap: () => Get.toNamed(Routes.organizationDetails),
                       ),
                       _SidebarEntry(
                         icon: Icons.settings_outlined,
                         label: 'Ajustes',
                         isActive: idx == HomeController.settingsIndex,
                         collapsed: collapsed,
-                        onTap: () => controller.currentIndex.value = HomeController.settingsIndex,
+                        onTap: () => _navTo(HomeController.settingsIndex, Routes.settings),
                       ),
                     ],
                   );

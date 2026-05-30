@@ -1597,3 +1597,180 @@ Cosas para mejorar mientras rediseñas (no son views nuevas, son mejoras a flujo
 | Browser tab title se cambia tras login (de "FinVault" → controller del current view) | Documento title hook por route en `GetMaterialApp.routingCallback` |
 
 Recomendado refactor wave después del batch de views: componentes compartidos primero, reduce LOC ~30% en próximas vistas.
+
+---
+
+# 58. AI Coach — rediseño completo (mobile + desktop + onboarding)
+
+Reemplaza `lib/modules/ai_coach/views/ai_coach_view.dart` (2118 LOC, se ve mal). Conecta a `AiCoachController`. Estado real del controller para que la IA sepa qué animar:
+
+```
+ChatMessage { id, role('user'|'assistant'|'tool'|'system'), content, toolName?,
+  toolArgs?, timestamp, isStreaming, imageUrl?, actions?[inline chips],
+  reaction?('👍'|'👎'), subagentName?, todoSnapshot?, approvalId?, errorText? }
+TodoItem { id, title, status('pending'|'in_progress'|'completed'|'failed'),
+  detail?, subagentName?, agentRole?, agentLabel? }
+
+Controller obs: messages, todos, isTyping, isProcessing, pendingApproval(Map?),
+  conversations[], currentConversationId, apiKeyConfigured(bool), selectedModel,
+  tools[], subagents[], isVoiceMode, attachedImage?, streamingText, suggestedPrompts[],
+  quickActions[], hitlEnabled, autoApprove, showTodos, showTools, tokenUsage,
+  unreadInsights, isConfiguringApi.
+Acciones: sendMessage, newConversation, approvePendingAction, rejectPendingAction,
+  toggleTodos, selectModel, configureApiKey, addReaction, clearConversation,
+  retryMessage, sendVoiceNote, toggleVoiceMode, pickImage, attachImage.
+```
+
+Capacidades del agente (langchain + Gemini): tool-calling (create_transaction / create_budget / create_saving_goal / create_income_plan / get_dashboard_summary / get_transactions / get_budgets), HITL approval antes de mutaciones, subagentes (analyzer / planner) que reportan al hilo, panel de todos en vivo.
+
+## Bloque contexto a pasar antes (además del §0 design system)
+
+```
+This is an AI financial coach chat interface — premium, calm, trustworthy.
+Tone: like Linear's command palette meets a friendly banking advisor.
+Distinctive accent: AI violet #8B5CF6 for agent identity + sparkle motifs.
+Avoid generic chatbot look. No cheap bubbles. Editorial spacing, soft depth.
+States to design ALL of: empty/welcome, typing/streaming, tool-call card,
+HITL approval card, subagent activity, error+retry, voice mode, image attach,
+API-key onboarding (not configured), conversation history, todos panel.
+```
+
+## 58.1 Onboarding — API key NO configurada (apiKeyConfigured == false)
+
+```
+AI Coach onboarding screen for FinVault, light fintech, shown when Gemini API key not configured. Full-screen takeover (no chat visible yet).
+
+Centered hero: animated AI orb — violet #8B5CF6 gradient sphere 96px with soft pulsing glow rings (concentric, animated outward), sparkle icon center white. Subtle floating particles around.
+
+Headline 28 weight 700 #1A1C1C: "Activa tu Coach financiero". Sub 15 #4A4455 max-width 420 centered: "Conecta tu clave de Gemini para desbloquear análisis con IA, sugerencias de ahorro y un asistente que actúa por ti."
+
+Value props row (3 mini cards, horizontal scroll on mobile, row on desktop): each = icon tinted + 2-word label. (1) sparkle violet "Análisis inteligente", (2) bolt emerald "Acciones automáticas", (3) shield #3B82F6 "Tú apruebas todo".
+
+Config card white radius 20 border #EDEAF6 shadow violet 8%, padded 24, max-width 480:
+- Label "CLAVE API DE GEMINI" letter-spacing 1.4 weight 700 #7B7487.
+- Password input with key icon prefix + eye toggle + paste button right. Border #E2E0F7, focus violet ring.
+- Helper row: link "¿Cómo obtengo mi clave?" violet + small external-link icon → opens Google AI Studio.
+- Model selector pills: "Flash (rápido)" / "Pro (potente)" — active violet.
+- Primary CTA "Conectar y empezar" 52 height violet pill radius 14, loading spinner when isConfiguringApi.
+- Secondary ghost link below: "Configurar más tarde" #7B7487.
+
+Trust footer: lock icon + "Tu clave se guarda cifrada y nunca se comparte." 11px #7B7487 centered.
+
+Desktop: same but config card centered 480 with the AI orb larger (128px) above, value props as 3-col row, max content 560 centered in the chat content area (sidebar shell still visible).
+```
+
+## 58.2 Empty / Welcome state (API ok, sin mensajes)
+
+```
+AI Coach empty/welcome state for FinVault, light fintech.
+
+Top: agent identity — AI orb avatar 56 violet #8B5CF6 with sparkle + soft glow, name "Coach" 18 weight 700 + status dot emerald "En línea" 12 #7B7487 below.
+
+Center welcome card: violet-tint soft bg radius 20, sparkle 48 icon, greeting "¡Hola! Soy tu coach financiero 💜" 18 weight 600, sub "Pregúntame sobre tus finanzas o pídeme que actúe por ti." 14 #4A4455.
+
+Suggested prompts (from controller.suggestedPrompts): grid 2-col mobile / 2x2 desktop of tappable cards. Each card white radius 14 border #EDEAF6 padded 14, left small icon tinted + prompt text 13.5. Examples: "📊 Analiza mis gastos del mes", "🎯 Créame una meta de ahorro", "📈 Predice mi balance a fin de mes", "💸 ¿Dónde puedo recortar gastos?". Hover lift + violet border.
+
+Quick actions strip below (from controller.quickActions): horizontal pill row — "Nueva transacción", "Resumen", "Presupuestos" — outlined violet chips with icons.
+
+Input bar (see 58.6) anchored bottom.
+```
+
+## 58.3 Conversación activa — mensajes (mobile)
+
+```
+AI Coach active chat mobile for FinVault, light fintech.
+
+Sticky top bar 56: back/menu left, center = AI orb 28 + "Coach" 16 weight 700, right = todos toggle icon (badge with pending count) + 3-dot menu (Nueva conversación / Limpiar / Configuración IA).
+
+Chat scroll, generous vertical rhythm (16px between turns):
+
+USER message: right-aligned, violet #7C3AED bg, white text, radius 18 with bottom-right corner 6 (tail feel), padded 12x14, max-width 82%, timestamp 10px #C7C3FE below right. If image attached: thumbnail rounded 12 above text.
+
+ASSISTANT message: left-aligned, white bg border #EDEAF6 radius 18 (bottom-left corner 6), padded 14, max-width 85%, with AI orb 24 to top-left. Markdown rendered (bold, lists, inline code chips). Below message: reaction row (👍 👎 — controller.addReaction) + copy icon, ghost style appearing on tap. timestamp 10 #7B7487.
+
+STREAMING assistant: same bubble but with animated caret + 3 pulsing violet dots while controller.isTyping; text appears progressively (streamingText).
+
+INLINE ACTION CHIPS (message.actions): inside/under assistant bubble, pill row outlined violet, e.g. "Ver gastos" / "Crear meta" — tap fires structured action.
+
+TOOL-CALL card (role=='tool'): distinct card, NOT a bubble. White radius 14 border #E2E0F7, left accent stripe violet 3px. Header: tool icon in violet square + tool label (e.g. "Creando transacción") + spinner/check status. Body: key-value args preview (Monto: $42 · Categoría: Comida) monospace-ish small. Collapses when done to a compact "✓ Transacción creada" green row.
+
+SUBAGENT activity (message.subagentName): inset card with dashed violet border, label "🤖 {subagentName} trabajando…" + mini progress + collapsible result.
+
+ERROR message (errorText): red-tint card, alert icon, error text + "Reintentar" violet text button (controller.retryMessage).
+
+Scroll-to-bottom FAB appears when scrolled up: small violet circle with down chevron + unread count.
+```
+
+## 58.4 HITL — approval card (pendingApproval != null)
+
+```
+HITL approval card for FinVault AI Coach, light fintech. Critical, must feel deliberate but not alarming.
+
+Card pinned above input bar (mobile) / inline in chat (desktop). White radius 16, amber-tint left stripe 4px + soft amber glow. Header: shield-with-check icon amber + "Aprobación requerida" 14 weight 700 + small "El Coach quiere ejecutar una acción" 12 #7B7487.
+
+Action preview block: bg #F8FAFC radius 12 padded 12 — tool name as title ("Crear transacción") + diff-style arg list: each row label #7B7487 + value #1A1C1C weight 600. For mutations show what WILL change (e.g. "Nueva transacción: -$42.50 · Comida · Hoy").
+
+Two buttons full-width row: "Rechazar" ghost/outlined #4A4455 (rejectPendingAction) + "Aprobar y ejecutar" violet filled weight 700 (approvePendingAction). 
+
+Settings hint footer: tiny toggle "Aprobar automáticamente acciones seguras" (controller.autoApprove) + "HITL activado" indicator.
+```
+
+## 58.5 Todos panel + subagents
+
+```
+AI Coach todos panel for FinVault, light fintech (controller.todos, showTodos).
+
+Desktop: right rail 320px, white bg border-left #EDEAF6. Header "Tareas del Coach" 14 weight 700 + count chip. Tab switch at top: "Tareas / Herramientas / Contexto".
+
+Tareas tab: vertical list of TodoItem cards. Each row: status icon left (pending=hollow circle #CCC3D8, in_progress=spinner violet, completed=check emerald filled, failed=x red), title 13.5 weight 600 + detail 11 #7B7487. If subagentName present: small agent chip "🤖 analyzer" violet-tint below. Group visually by subagent if multiple. Smooth reorder/strike animation on completion.
+
+Herramientas tab: list of available tools (controller.tools) as cards — tool icon + name + 1-line description + "Disponible" status dot. Read-only catalog.
+
+Contexto tab: snapshot card — current workspace, active goals count, recent tx count, token usage meter (controller.tokenUsage as subtle bar), selected model chip + change link.
+
+Mobile: same content but as a bottom sheet / drawer (slide from right), triggered by top-bar todos toggle. Drag handle top, full-height 85%.
+```
+
+## 58.6 Input bar (todos los estados)
+
+```
+AI Coach input bar for FinVault, light fintech. Bottom-anchored, sticky, white bg + top hairline #EDEAF6, safe-area aware.
+
+Default: rounded pill container radius 24 border #E2E0F7, left = attach/image icon (controller.pickImage) + camera, center = multiline text field "Escribe a tu Coach…" hint #7B7487, right = mic icon (controller.toggleVoiceMode) when empty → morphs to send button (violet circle 40, arrow-up white) when text present.
+
+Image-attached state: small thumbnail chip above the field with X to remove (controller.attachedImage).
+
+Voice mode (isVoiceMode): field replaced by live waveform animation violet + timer + "Suelta para enviar" + cancel X. Big mic button pulsing.
+
+Processing (isProcessing): send button becomes stop-square; subtle "Coach está pensando…" shimmer above bar.
+
+Model + HITL mini-controls: tiny row above bar (optional, collapsible): model chip "Flash ▾" (selectModel) + HITL shield toggle.
+```
+
+## 58.7 Desktop — layout 3 columnas
+
+```
+AI Coach desktop layout for FinVault, light fintech. Content area only (app sidebar shell already at far left). Three internal columns:
+
+LEFT 280px (conversations): header "Conversaciones" + "Nueva" violet button (newConversation). Search input. List of past conversations (controller.conversations): each row title weight 600 13 + last-message preview 11 #7B7487 ellipsis + relative time 10. Active row violet-tint bg + left accent. Hover shows delete/rename on 3-dot.
+
+CENTER (chat): max-width 760 centered. Top mini-header: AI orb + "Coach" + model selector chip + token usage subtle. Messages area (58.3 patterns, slightly larger spacing). HITL cards inline (58.4). Input bar bottom (58.6) constrained to 760.
+
+RIGHT 320px (todos/tools/context): the panel from 58.5 with the 3 tabs.
+
+Empty/onboarding states (58.1 / 58.2) render centered in the CENTER column with side columns dimmed/empty-stated. Responsive: <1280 collapse RIGHT panel into a toggle; <1024 → mobile layout (58.3) with drawers.
+```
+
+## 58.8 Micro-detalles / motion
+
+```
+- AI orb: signature element. Violet→indigo radial gradient, 2 concentric pulse rings on idle, faster pulse when isProcessing. Reuse as avatar (24/28/56/96/128).
+- Streaming: token-by-token reveal + blinking caret. Smooth, not janky.
+- Tool-call: expand-on-start, collapse-on-done with green check morph.
+- Todos: items slide + strikethrough + fade on completion.
+- Reactions: pop scale 1.2→1 on tap.
+- Suggested prompts: stagger fade-in on empty state.
+- HITL appear: gentle slide-up + soft amber glow breathe (not aggressive).
+- Everything LIGHT mode, violet-forward, calm premium fintech. Inter font.
+```
+

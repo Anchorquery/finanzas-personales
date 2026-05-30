@@ -3,6 +3,7 @@ import '../../core/utils/app_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dio/dio.dart' as dio;
 import 'directus_service.dart';
+import 'biometric_auth_service.dart';
 import '../../core/utils/snackbar_service.dart';
 import '../../routes/app_routes.dart';
 
@@ -118,6 +119,7 @@ class AuthService extends GetxService {
       final success = await _directusService.login(email, password);
       if (success) {
         isLoggedIn.value = true;
+        await _reconcileBiometricBinding(email);
         return true;
       }
       SnackbarService.showError(
@@ -150,6 +152,66 @@ class AuthService extends GetxService {
 
   Future<bool> recoverPassword(String email) async {
     return await _directusService.requestPasswordReset(email);
+  }
+
+  Future<bool> resetPassword(String token, String newPassword) async {
+    return await _directusService.resetPassword(token, newPassword);
+  }
+
+  /// Si bio está vinculada a otro email, la desactiva al detectar mismatch.
+  /// Evita que un segundo usuario herede la bio del primero tras un logout.
+  Future<void> _reconcileBiometricBinding(String currentEmail) async {
+    if (!Get.isRegistered<BiometricAuthService>()) return;
+    final bio = Get.find<BiometricAuthService>();
+    if (!await bio.isEnabled()) return;
+    final bound = await bio.getBoundEmail();
+    if (bound == null) return;
+    if (bound.toLowerCase().trim() != currentEmail.toLowerCase().trim()) {
+      Get.log(
+        '[AUTH] bio vinculada a $bound, login con $currentEmail → desactivar',
+      );
+      await bio.disable(resetPrompt: true);
+    }
+  }
+
+  /// Login usando biometría: valida huella/face, refresca el access_token
+  /// con el refresh_token guardado en secure storage.
+  ///
+  /// Devuelve `true` si quedó la sesión activa y se puede navegar a la ruta
+  /// inicial. Si falla la biometría o el refresh, devuelve `false` y el caller
+  /// debe pedir login por email/password.
+  Future<bool> loginWithBiometrics() async {
+    if (!Get.isRegistered<BiometricAuthService>()) return false;
+    final bio = Get.find<BiometricAuthService>();
+
+    if (!await bio.isEnabled()) return false;
+    if (!await bio.isAvailable()) return false;
+
+    final refreshTokenValue = await AppStorage.read(key: 'refresh_token');
+    if (refreshTokenValue == null || refreshTokenValue.isEmpty) {
+      // Sin refresh token no podemos restaurar sesión: desactivar bio y permitir
+      // re-ofrecer enroll en el próximo login con password.
+      await bio.disable(resetPrompt: true);
+      return false;
+    }
+
+    final ok = await bio.authenticate(
+      reason: 'Inicia sesión en FinVault con tu biometría',
+    );
+    if (!ok) return false;
+
+    final refreshed = await _directusService.refreshToken();
+    if (!refreshed) {
+      SnackbarService.showWarning(
+        'Sesión expirada',
+        'Inicia sesión con tu correo y contraseña para continuar.',
+      );
+      await bio.disable(resetPrompt: true);
+      return false;
+    }
+
+    isLoggedIn.value = true;
+    return true;
   }
 
   Future<bool> loginWithGoogle() async {

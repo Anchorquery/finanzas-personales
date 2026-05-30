@@ -129,33 +129,67 @@ class SecurityView extends GetView<SecurityController> {
                   ),
                 ),
               ),
-              const SizedBox(height: 48),
-              // Nota sobre funciones futuras
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: surfaceContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1)),
-                ),
-                child: Row(
+              const SizedBox(height: 32),
+              // ── Biometría ───────────────────────────────────────────
+              Obx(() {
+                if (!controller.bioSupported.value) {
+                  return const SizedBox.shrink();
+                }
+                final enrolledOs = controller.bioEnrolledInOs.value;
+                final enabled = controller.bioEnabled.value;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline,
-                        color: AppTheme.primaryColor.withValues(alpha: 0.6)),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        'La autenticación biométrica y 2FA estarán disponibles próximamente.',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: onSurfaceVariant,
+                    Text(
+                      'Acceso rápido',
+                      style: GoogleFonts.manrope(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: surfaceContainer,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: SwitchListTile.adaptive(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 8),
+                          value: enabled,
+                          onChanged: enrolledOs
+                              ? (v) => controller.toggleBiometric(v)
+                              : null,
+                          activeThumbColor: AppTheme.primaryColor,
+                          secondary: Icon(controller.bioIcon,
+                              color: AppTheme.primaryColor),
+                          title: Text(
+                            'Iniciar sesión con ${controller.bioLabel}',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: onSurface,
+                            ),
+                          ),
+                          subtitle: Text(
+                            enrolledOs
+                                ? 'Usa tu biometría para entrar sin contraseña en este dispositivo.'
+                                : 'Registra una huella o Face ID en los ajustes del sistema para activarla.',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: onSurfaceVariant,
+                            ),
+                          ),
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
                   ],
-                ),
-              ),
+                );
+              }),
             ],
           ),
         );

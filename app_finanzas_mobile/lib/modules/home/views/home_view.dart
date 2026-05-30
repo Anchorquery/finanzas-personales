@@ -99,7 +99,7 @@ class _HomeViewState extends State<HomeView> {
             width: _sidebarCollapsed ? 64 : 260,
             child: _buildPersistentSidebar(context),
           ),
-          const VerticalDivider(width: 1, thickness: 1, color: Color(0x1AFFFFFF)),
+          const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEDEAF6)),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -170,7 +170,7 @@ class _HomeViewState extends State<HomeView> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: const Color(0xFFF3F3F4),
               borderRadius: BorderRadius.circular(8),
             ),
             child: AnimatedRotation(
@@ -179,7 +179,7 @@ class _HomeViewState extends State<HomeView> {
               child: const Icon(
                 Icons.keyboard_double_arrow_left_rounded,
                 size: 16,
-                color: Colors.white54,
+                color: Color(0xFF7B7487),
               ),
             ),
           ),
@@ -188,7 +188,12 @@ class _HomeViewState extends State<HomeView> {
     );
 
     return Container(
-      color: AppTheme.backgroundDark,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          right: BorderSide(color: Color(0xFFEDEAF6)),
+        ),
+      ),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -209,23 +214,23 @@ class _HomeViewState extends State<HomeView> {
                     Container(
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                        color: AppTheme.primary,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
-                        Icons.account_balance_wallet,
-                        color: AppTheme.primaryColor,
+                        Icons.account_balance_wallet_rounded,
+                        color: Colors.white,
                         size: 19,
                       ),
                     ),
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
-                        'Finanzas',
+                        'FinVault',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppTheme.primary,
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -249,7 +254,7 @@ class _HomeViewState extends State<HomeView> {
                             child: Text(
                               controller.organizationName.value,
                               style: const TextStyle(
-                                color: Colors.white38,
+                                color: Color(0xFF7B7487),
                                 fontSize: 11,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -258,7 +263,7 @@ class _HomeViewState extends State<HomeView> {
                           const Icon(
                             Icons.unfold_more_rounded,
                             size: 13,
-                            color: Colors.white38,
+                            color: Color(0xFF7B7487),
                           ),
                         ],
                       ),
@@ -282,8 +287,9 @@ class _HomeViewState extends State<HomeView> {
                             backgroundColor: Colors.transparent,
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryColor,
+                            backgroundColor: AppTheme.primary,
                             foregroundColor: Colors.white,
+                            elevation: 0,
                             padding: EdgeInsets.zero,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -302,8 +308,9 @@ class _HomeViewState extends State<HomeView> {
                       icon: const Icon(Icons.add_rounded, size: 18),
                       label: const Text('Nueva Transacción'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
+                        backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
+                        elevation: 0,
                         minimumSize: const Size(double.infinity, 42),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -313,7 +320,7 @@ class _HomeViewState extends State<HomeView> {
             ),
 
             const SizedBox(height: 12),
-            const Divider(color: Colors.white10, height: 1),
+            const Divider(color: Color(0xFFEDEAF6), height: 1),
 
             // ── Items de navegación ────────────────────────────────────────
             Expanded(
@@ -354,7 +361,7 @@ class _HomeViewState extends State<HomeView> {
 
                       SizedBox(height: collapsed ? 8 : 0),
                       if (!collapsed) _SidebarSectionLabel(label: 'Finanzas'),
-                      if (collapsed) const Divider(color: Colors.white10, height: 16),
+                      if (collapsed) const Divider(color: Color(0xFFEDEAF6), height: 16),
 
                       _SidebarEntry(
                         icon: Icons.add_chart_rounded,
@@ -401,7 +408,7 @@ class _HomeViewState extends State<HomeView> {
 
                       SizedBox(height: collapsed ? 8 : 0),
                       if (!collapsed) _SidebarSectionLabel(label: 'Herramientas'),
-                      if (collapsed) const Divider(color: Colors.white10, height: 16),
+                      if (collapsed) const Divider(color: Color(0xFFEDEAF6), height: 16),
 
                       _SidebarEntry(
                         icon: Icons.receipt_long_outlined,
@@ -434,7 +441,7 @@ class _HomeViewState extends State<HomeView> {
 
                       SizedBox(height: collapsed ? 8 : 0),
                       if (!collapsed) _SidebarSectionLabel(label: 'Cuenta'),
-                      if (collapsed) const Divider(color: Colors.white10, height: 16),
+                      if (collapsed) const Divider(color: Color(0xFFEDEAF6), height: 16),
 
                       _SidebarEntry(
                         icon: Icons.person_outline_rounded,
@@ -472,20 +479,29 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
-      backgroundColor: AppTheme.backgroundDark,
+      backgroundColor: Colors.white,
       child: Column(
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(color: AppTheme.surfaceDark),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF8FAFC),
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFEDEAF6)),
+              ),
+            ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 25,
-                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   child: const Icon(
-                    Icons.account_balance_wallet,
-                    color: AppTheme.primaryColor,
-                    size: 25,
+                    Icons.account_balance_wallet_rounded,
+                    color: Colors.white,
+                    size: 24,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -496,7 +512,10 @@ class _HomeViewState extends State<HomeView> {
                     children: [
                       const Text(
                         'Organización',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                        style: TextStyle(
+                          color: Color(0xFF7B7487),
+                          fontSize: 12,
+                        ),
                       ),
                       InkWell(
                         onTap: () {
@@ -510,16 +529,16 @@ class _HomeViewState extends State<HomeView> {
                                 child: Text(
                                   controller.organizationName.value,
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: Color(0xFF1A1C1C),
                                     fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               const Icon(
                                 Icons.chevron_right_rounded,
-                                color: Colors.white70,
+                                color: Color(0xFF7B7487),
                                 size: 20,
                               ),
                             ],
@@ -540,7 +559,7 @@ class _HomeViewState extends State<HomeView> {
               Get.toNamed('/organization-details');
             },
           ),
-          const Divider(color: Colors.white10, height: 1),
+          const Divider(color: Color(0xFFEDEAF6), height: 1),
           _DrawerItem(
             icon: Icons.grid_view_rounded,
             label: 'Dashboard',
@@ -605,7 +624,7 @@ class _HomeViewState extends State<HomeView> {
               Get.toNamed(Routes.recurring);
             },
           ),
-          const Divider(color: Colors.white10, height: 1),
+          const Divider(color: Color(0xFFEDEAF6), height: 1),
           _DrawerItem(
             icon: Icons.receipt_long_outlined,
             label: 'Transacciones',
@@ -638,7 +657,7 @@ class _HomeViewState extends State<HomeView> {
               Get.to(() => const ProfileView());
             },
           ),
-          const Divider(color: Colors.white10, height: 1),
+          const Divider(color: Color(0xFFEDEAF6), height: 1),
           _DrawerItem(
             icon: Icons.settings_rounded,
             label: 'Ajustes',
@@ -666,7 +685,7 @@ class _SidebarSectionLabel extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: const TextStyle(
-          color: Colors.white24,
+          color: Color(0xFF7B7487),
           fontSize: 10,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.1,
@@ -695,10 +714,13 @@ class _SidebarEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = isActive ? AppTheme.primaryColor : Colors.white54;
-    final bg = isActive
-        ? AppTheme.primaryColor.withValues(alpha: 0.15)
-        : Colors.transparent;
+    final iconColor =
+        isActive ? AppTheme.primary : const Color(0xFF7B7487);
+    final bg =
+        isActive ? const Color(0xFFEDE9FE) : Colors.transparent;
+    final textColor = isActive
+        ? AppTheme.primary
+        : const Color(0xFF4A4455);
 
     final tile = MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -726,10 +748,11 @@ class _SidebarEntry extends StatelessWidget {
                       child: Text(
                         label,
                         style: TextStyle(
-                          color: isActive ? Colors.white : Colors.white70,
+                          color: textColor,
                           fontSize: 13,
-                          fontWeight:
-                              isActive ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isActive
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -739,7 +762,7 @@ class _SidebarEntry extends StatelessWidget {
                         width: 5,
                         height: 5,
                         decoration: const BoxDecoration(
-                          color: AppTheme.primaryColor,
+                          color: AppTheme.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -778,10 +801,14 @@ class _DrawerItem extends StatelessWidget {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: ListTile(
-        leading: Icon(icon, color: Colors.white70),
+        leading: Icon(icon, color: const Color(0xFF7B7487)),
         title: Text(
           label,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: const TextStyle(
+            color: Color(0xFF1A1C1C),
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

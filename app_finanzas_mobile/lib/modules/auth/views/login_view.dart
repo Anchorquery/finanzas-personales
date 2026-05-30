@@ -6,8 +6,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/snackbar_service.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/services/biometric_auth_service.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../widgets/auth_scaffold.dart';
+import '../widgets/biometric_enroll_sheet.dart';
 import 'forgot_password_view.dart';
 import 'register_view.dart';
 
@@ -17,11 +19,56 @@ import 'register_view.dart';
 
 class LoginController extends GetxController {
   final AuthService _authService = Get.find();
+  final BiometricAuthService? _bio = Get.isRegistered<BiometricAuthService>()
+      ? Get.find<BiometricAuthService>()
+      : null;
+
   final emailParams = TextEditingController();
   final passParams = TextEditingController();
   final isLoading = false.obs;
   final isPasswordVisible = false.obs;
   final rememberMe = true.obs;
+
+  /// Disponibilidad real de biometría en este dispositivo.
+  final bioAvailable = false.obs;
+
+  /// El usuario ya activó bio previamente (hay refresh_token + flag).
+  final bioEnabled = false.obs;
+
+  /// Tipo predominante para icono dinámico (face vs huella).
+  final bioKind = BiometricKind.none.obs;
+
+  bool _autoPromptDone = false;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _initBiometrics();
+  }
+
+  Future<void> _initBiometrics() async {
+    final b = _bio;
+    if (b == null) return;
+    final available = await b.isAvailable();
+    if (!available) return;
+    final enrolled = await b.hasEnrolledBiometrics();
+    bioAvailable.value = enrolled;
+    bioKind.value = await b.getPreferredKind();
+    bioEnabled.value = await b.isEnabled();
+
+    // Si bio ya está activa, prerellenar email para feedback visual.
+    final email = await b.getBoundEmail();
+    if (email != null && emailParams.text.isEmpty) {
+      emailParams.text = email;
+    }
+
+    // Auto-prompt una sola vez al abrir login si bio está activa.
+    if (!_autoPromptDone && bioEnabled.value && bioAvailable.value) {
+      _autoPromptDone = true;
+      // Esperar un frame para que el sheet/AuthScaffold esté montado.
+      WidgetsBinding.instance.addPostFrameCallback((_) => doBiometricLogin());
+    }
+  }
 
   @override
   void onClose() {
@@ -52,6 +99,8 @@ class LoginController extends GetxController {
       final success = await _authService.login(email, pass);
       if (isClosed) return;
       if (success) {
+        await _maybeOfferBiometricEnroll(email);
+        if (isClosed) return;
         final initialRoute = await _authService.getInitialRoute();
         if (isClosed) return;
         Get.offAllNamed(initialRoute);
@@ -61,12 +110,63 @@ class LoginController extends GetxController {
     }
   }
 
+  /// Login usando huella/Face ID.
+  Future<void> doBiometricLogin() async {
+    if (isLoading.value) return;
+    final b = _bio;
+    if (b == null) return;
+    if (!bioAvailable.value) {
+      SnackbarService.showWarning(
+        'No disponible',
+        'Este dispositivo no tiene biometría configurada.',
+      );
+      return;
+    }
+    if (!bioEnabled.value) {
+      SnackbarService.showWarning(
+        'Activa la biometría',
+        'Inicia sesión con tu correo y luego actívala desde Ajustes › Seguridad.',
+      );
+      return;
+    }
+
+    HapticFeedback.lightImpact();
+    isLoading.value = true;
+    try {
+      final ok = await _authService.loginWithBiometrics();
+      if (isClosed) return;
+      if (ok) {
+        final initialRoute = await _authService.getInitialRoute();
+        if (isClosed) return;
+        Get.offAllNamed(initialRoute);
+      } else {
+        // Refrescar estado: si AuthService desactivó bio, ocultar botón.
+        bioEnabled.value = await b.isEnabled();
+      }
+    } finally {
+      if (!isClosed) isLoading.value = false;
+    }
+  }
+
   Future<void> doGoogleLogin() async {
     await _authService.loginWithGoogle();
     if (_authService.isLoggedIn.value) {
+      final email = emailParams.text.trim();
+      if (email.isNotEmpty) {
+        await _maybeOfferBiometricEnroll(email);
+      }
       final initialRoute = await _authService.getInitialRoute();
       Get.offAllNamed(initialRoute);
     }
+  }
+
+  Future<void> _maybeOfferBiometricEnroll(String email) async {
+    final b = _bio;
+    if (b == null) return;
+    if (!await b.shouldOfferEnroll()) return;
+    final ctx = Get.context;
+    if (ctx == null || !ctx.mounted) return;
+    await BiometricEnrollSheet.maybeShow(ctx, email: email);
   }
 }
 
@@ -260,40 +360,38 @@ class _MobileLogin extends StatelessWidget {
                       const _Divider(text: 'O CONTINÚA CON'),
                       const SizedBox(height: 20),
 
-                      // Google + Bio grid 2 cols
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _SecondaryBtn(
-                              onPressed: controller.doGoogleLogin,
-                              icon: const Icon(
-                                Icons.g_mobiledata_rounded,
-                                size: 28,
-                                color: AppTheme.primary,
-                              ),
-                              label: 'Google',
-                            ),
+                      // Google + Bio (Bio solo en mobile real)
+                      Obx(() {
+                        final googleBtn = _SecondaryBtn(
+                          onPressed: controller.doGoogleLogin,
+                          icon: const Icon(
+                            Icons.g_mobiledata_rounded,
+                            size: 28,
+                            color: AppTheme.primary,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _SecondaryBtn(
-                              onPressed: () {
-                                HapticFeedback.lightImpact();
-                                SnackbarService.showWarning(
-                                  'Próximamente',
-                                  'Inicio con biometría disponible pronto.',
-                                );
-                              },
-                              icon: const Icon(
-                                Icons.fingerprint_rounded,
-                                size: 22,
-                                color: AppTheme.primary,
+                          label: 'Google',
+                        );
+                        if (!controller.bioAvailable.value) {
+                          return googleBtn;
+                        }
+                        return Row(
+                          children: [
+                            Expanded(child: googleBtn),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _SecondaryBtn(
+                                onPressed: controller.doBiometricLogin,
+                                icon: Icon(
+                                  _iconForKind(controller.bioKind.value),
+                                  size: 22,
+                                  color: AppTheme.primary,
+                                ),
+                                label: _labelForKind(controller.bioKind.value),
                               ),
-                              label: 'Biométricos',
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        );
+                      }),
 
                       const SizedBox(height: 24),
                       // Register footer
@@ -548,40 +646,38 @@ class _DesktopLogin extends StatelessWidget {
                       const _Divider(text: 'O CONTINÚA CON'),
                       const SizedBox(height: 16),
 
-                      // Google + Bio
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _SecondaryBtn(
-                              onPressed: controller.doGoogleLogin,
-                              icon: const Icon(
-                                Icons.g_mobiledata_rounded,
-                                size: 26,
-                                color: AppTheme.primary,
-                              ),
-                              label: 'Google',
-                            ),
+                      // Google + Bio (Bio solo en mobile real)
+                      Obx(() {
+                        final googleBtn = _SecondaryBtn(
+                          onPressed: controller.doGoogleLogin,
+                          icon: const Icon(
+                            Icons.g_mobiledata_rounded,
+                            size: 26,
+                            color: AppTheme.primary,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _SecondaryBtn(
-                              onPressed: () {
-                                HapticFeedback.lightImpact();
-                                SnackbarService.showWarning(
-                                  'Próximamente',
-                                  'Inicio con biometría disponible pronto.',
-                                );
-                              },
-                              icon: const Icon(
-                                Icons.fingerprint_rounded,
-                                size: 20,
-                                color: AppTheme.primary,
+                          label: 'Google',
+                        );
+                        if (!controller.bioAvailable.value) {
+                          return googleBtn;
+                        }
+                        return Row(
+                          children: [
+                            Expanded(child: googleBtn),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _SecondaryBtn(
+                                onPressed: controller.doBiometricLogin,
+                                icon: Icon(
+                                  _iconForKind(controller.bioKind.value),
+                                  size: 20,
+                                  color: AppTheme.primary,
+                                ),
+                                label: _labelForKind(controller.bioKind.value),
                               ),
-                              label: 'Biometría',
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        );
+                      }),
                     ],
                   ),
                 ),
@@ -656,6 +752,33 @@ class _DesktopLogin extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// Biometric helpers
+// ════════════════════════════════════════════════════════════════════════
+
+IconData _iconForKind(BiometricKind kind) {
+  switch (kind) {
+    case BiometricKind.face:
+      return Icons.face_rounded;
+    case BiometricKind.fingerprint:
+    case BiometricKind.iris:
+    case BiometricKind.none:
+      return Icons.fingerprint_rounded;
+  }
+}
+
+String _labelForKind(BiometricKind kind) {
+  switch (kind) {
+    case BiometricKind.face:
+      return 'Face ID';
+    case BiometricKind.iris:
+      return 'Iris';
+    case BiometricKind.fingerprint:
+    case BiometricKind.none:
+      return 'Huella';
   }
 }
 

@@ -11,6 +11,7 @@ import 'routes/app_pages.dart';
 import 'core/theme/app_theme.dart';
 import 'core/config/app_config.dart';
 import 'data/services/auth_service.dart';
+import 'data/services/biometric_auth_service.dart';
 
 import 'data/services/notification_service.dart';
 import 'data/services/exchange_rate_service.dart';
@@ -60,6 +61,8 @@ Future<void> _bootstrap() async {
 
   Get.put<VoiceInputService>(VoiceInputService(), permanent: true);
   unawaited(Get.putAsync(() => QuickActionsService().init()));
+
+  Get.put<BiometricAuthService>(BiometricAuthService(), permanent: true);
 
   Get.log('--- [MAIN] Inicializando AuthService...');
   final authService = Get.put(AuthService());

@@ -392,6 +392,27 @@ extension DirectusRestExtension on DirectusService {
     }
   }
 
+  /// Cambia la contraseña usando el token recibido por correo.
+  /// Endpoint Directus: `POST /auth/password/reset` con `{token, password}`.
+  Future<bool> resetPassword(String token, String password) async {
+    try {
+      final dio.Dio dioInstance = dio.Dio(
+        dio.BaseOptions(
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+        ),
+      );
+      final response = await dioInstance.post(
+        '$serverUrl/auth/password/reset',
+        data: {'token': token, 'password': password},
+      );
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      Get.log('[DIRECTUS] Password reset error: $e');
+      return false;
+    }
+  }
+
   // --- FILES REST ---
   Future<String?> uploadFile(File file) async {
     try {

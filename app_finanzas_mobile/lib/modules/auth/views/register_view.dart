@@ -7,6 +7,7 @@ import '../../../core/utils/validators.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../routes/app_routes.dart';
 import '../widgets/auth_scaffold.dart';
+import '../widgets/biometric_enroll_sheet.dart';
 
 // ════════════════════════════════════════════════════════════════════════
 // Controller
@@ -88,6 +89,11 @@ class RegisterController extends GetxController {
       final loginSuccess = await _authService.login(email, pass);
       if (isClosed) return;
       if (loginSuccess) {
+        final ctx = Get.context;
+        if (ctx != null && ctx.mounted) {
+          await BiometricEnrollSheet.maybeShow(ctx, email: email);
+        }
+        if (isClosed) return;
         final initialRoute = await _authService.getInitialRoute();
         if (isClosed) return;
         Get.offAllNamed(initialRoute);

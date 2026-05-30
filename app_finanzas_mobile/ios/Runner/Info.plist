@@ -51,5 +51,7 @@
 	<string>Necesitamos acceso a la galería para seleccionar recibos.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Necesitamos acceso al micrófono para grabar video.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Usa Face ID para iniciar sesión en FinVault de forma rápida y segura.</string>
 </dict>
 </plist>

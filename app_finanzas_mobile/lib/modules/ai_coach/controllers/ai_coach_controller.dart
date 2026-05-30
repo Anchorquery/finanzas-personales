@@ -119,8 +119,13 @@ class AICoachController extends GetxController {
 
   static const _maxConversationTurns = 20;
   static const _modelName = 'gemini-2.5-flash';
+  static const flashModel = 'gemini-2.5-flash';
+  static const proModel = 'gemini-2.5-pro';
   static const _localApiKeyStorageKey = 'ai_gemini_key_cached';
+  static const _localModelStorageKey = 'ai_gemini_model';
   static const _maxAgentIterations = 8;
+
+  bool get isConfiguredValue => isConfigured.value;
 
   String get _workspaceId {
     if (Get.isRegistered<WorkspacesController>()) {

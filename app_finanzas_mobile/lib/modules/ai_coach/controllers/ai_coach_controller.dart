@@ -1568,7 +1568,9 @@ REGLAS
       return t?.aiCoachErrorTimeout ??
           '⏱️ La respuesta tardó demasiado. Verifica tu conexión e intenta de nuevo.';
     }
-    return t?.aiCoachErrorGeneric ?? '❌ Error al obtener respuesta. Intenta de nuevo.';
+    final detail = err.replaceAll('\n', ' ').trim();
+    final short = detail.length > 220 ? '${detail.substring(0, 220)}…' : detail;
+    return '❌ Error al obtener respuesta.\n\n```\n$short\n```';
   }
 
   String _monthName(int month) {

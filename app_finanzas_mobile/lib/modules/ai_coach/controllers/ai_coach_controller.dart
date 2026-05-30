@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:langchain_google/langchain_google.dart';
@@ -1580,10 +1579,6 @@ REGLAS
     return '${d.day} ${m[d.month]} ${d.year}';
   }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
 }
 
 class _MerchantAgg {

@@ -1540,7 +1540,17 @@ REGLAS
 
   String _errorMessage(String err) {
     final t = _l10n;
-    if (err.contains('API key') || err.contains('INVALID_ARGUMENT')) {
+    // Solo errores de AUTENTICACIÓN reales invalidan la key + botan al
+    // onboarding. INVALID_ARGUMENT (schema de tool, request malformado, etc.)
+    // NO debe borrar la key ni desconfigurar el coach.
+    final lower = err.toLowerCase();
+    final isAuthError = lower.contains('api_key_invalid') ||
+        lower.contains('api key not valid') ||
+        lower.contains('permission_denied') ||
+        lower.contains('unauthenticated') ||
+        err.contains('401') ||
+        err.contains('403');
+    if (isAuthError) {
       isConfigured.value = false;
       invalidateApiKeyCache();
       return t?.aiCoachErrorApiKey ??

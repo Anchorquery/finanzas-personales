@@ -303,15 +303,26 @@ class AICoachController extends GetxController {
         Get.log('AICoachController: persist api key warning: $e');
       }
 
-      await _setupChatModel(key);
-      isConfigured.value = true;
-      if (messages.isEmpty) {
+      // _setupChatModel crea el modelo (síncrono) y luego construye contexto
+      // (red). Un fallo de red NO debe descartar la key recién guardada.
+      try {
+        await _setupChatModel(key);
+      } catch (e) {
+        Get.log('AICoachController: _setupChatModel warning: $e');
+      }
+      isConfigured.value = _chatModel != null;
+      if (isConfigured.value && messages.isEmpty) {
         _addWelcomeMessage();
       }
-      return true;
+      return isConfigured.value;
     } catch (e, st) {
       Get.log('AICoachController: configureApiKey error: $e');
       _captureSentry(e, st, tag: 'configure_api_key');
+      // Solo si ni el modelo se pudo crear descartamos la key.
+      if (_chatModel != null) {
+        isConfigured.value = true;
+        return true;
+      }
       isConfigured.value = false;
       invalidateApiKeyCache();
       _cachedApiKey = null;

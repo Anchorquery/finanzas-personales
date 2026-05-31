@@ -734,7 +734,9 @@ REGLAS
 
           for (final tc in output.toolCalls) {
             final toolName = tc.name;
-            final args = tc.arguments;
+            // langchain entrega ImmutableMap<dynamic,dynamic>; normalizar a
+            // Map<String,dynamic> (recursivo) para evitar TypeError en casts.
+            final args = _normalizeArgs(tc.arguments);
 
             // Insert tool call bubble BEFORE the typing placeholder
             messages.insert(
@@ -847,6 +849,23 @@ REGLAS
   }
 
   // ── Tool executor ─────────────────────────────────────────────────────────────
+
+  /// langchain entrega `ImmutableMap<dynamic,dynamic>`; los casts internos
+  /// (`args['x'] as String?`) lanzan TypeError. Normaliza recursivamente a
+  /// `Map<String,dynamic>` / `List<dynamic>` con claves String.
+  Map<String, dynamic> _normalizeArgs(Map<dynamic, dynamic> raw) {
+    dynamic conv(dynamic v) {
+      if (v is Map) {
+        return v.map((k, val) => MapEntry(k.toString(), conv(val)));
+      }
+      if (v is List) {
+        return v.map(conv).toList();
+      }
+      return v;
+    }
+
+    return (conv(raw) as Map).cast<String, dynamic>();
+  }
 
   Future<String> _executeTool(
       String name, Map<String, dynamic> args) async {
@@ -1531,7 +1550,7 @@ REGLAS
         for (final tc in output.toolCalls) {
           // Gate: subagent restricted to read-only tools.
           final result = AgentToolSpecs.isReadOnlyTool(tc.name)
-              ? await _executeTool(tc.name, tc.arguments)
+              ? await _executeTool(tc.name, _normalizeArgs(tc.arguments))
               : 'Error: subagentes no pueden usar la herramienta "${tc.name}".';
           history.add(lc.ToolChatMessage(
             content: result,

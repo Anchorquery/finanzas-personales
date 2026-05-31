@@ -216,8 +216,17 @@ class AICoachController extends GetxController {
       if (apiKey == null || apiKey.isEmpty) return;
 
       _cachedApiKey = apiKey;
-      await _setupChatModel(apiKey);
-      isConfigured.value = true;
+      try {
+        await _setupChatModel(apiKey);
+      } catch (e) {
+        // Fallo de red al construir contexto NO debe desconfigurar el coach:
+        // el modelo se crea síncrono antes de la red.
+        Get.log('AICoachController: _setupChatModel warning: $e');
+      }
+      // Si hay key válida, el coach queda configurado aunque el contexto
+      // falle (se reintenta luego con refreshContext / al enviar).
+      isConfigured.value = _chatModel != null;
+      if (!isConfigured.value) return;
 
       _loadPersistedMessages();
 

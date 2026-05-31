@@ -730,7 +730,11 @@ REGLAS
 
         // ── Tool call branch ────────────────────────────────────────────────
         if (output.toolCalls.isNotEmpty) {
-          _langchainHistory.add(output);
+          // langchain_google re-serializa este mensaje en la siguiente vuelta
+          // (g.FunctionCall(args: call.arguments)); si arguments es
+          // ImmutableMap revienta con "is not a subtype of Map<String,
+          // dynamic>?". Reconstruir con args normalizados.
+          _langchainHistory.add(_normalizeAiMessage(output));
 
           for (final tc in output.toolCalls) {
             final toolName = tc.name;
@@ -865,6 +869,27 @@ REGLAS
     }
 
     return (conv(raw) as Map).cast<String, dynamic>();
+  }
+
+  /// Reconstruye un AIChatMessage con toolCalls cuyos `arguments` son
+  /// `Map<String,dynamic>` reales. langchain entrega ImmutableMap, lo que
+  /// rompe la re-serialización a Gemini en la siguiente vuelta del agente.
+  lc.AIChatMessage _normalizeAiMessage(lc.AIChatMessage msg) {
+    if (msg.toolCalls.isEmpty) return msg;
+    return lc.AIChatMessage(
+      content: msg.content,
+      appendToolCalls: msg.appendToolCalls,
+      toolCalls: msg.toolCalls
+          .map(
+            (tc) => lc.AIChatMessageToolCall(
+              id: tc.id,
+              name: tc.name,
+              argumentsRaw: tc.argumentsRaw,
+              arguments: _normalizeArgs(tc.arguments),
+            ),
+          )
+          .toList(),
+    );
   }
 
   Future<String> _executeTool(

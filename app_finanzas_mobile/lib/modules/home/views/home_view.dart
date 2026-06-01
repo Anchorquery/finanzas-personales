@@ -138,7 +138,7 @@ class _HomeViewState extends State<HomeView> {
     if (stackIndex < 0) stackIndex = 0;
 
     if (stackIndex <= 3) {
-      return IndexedStack(
+      return _LazyIndexedStack(
         index: stackIndex,
         children: const [
           DashboardView(),
@@ -824,6 +824,48 @@ class _DrawerItem extends StatelessWidget {
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
+    );
+  }
+}
+
+/// IndexedStack perezoso: solo construye un hijo la primera vez que se muestra.
+/// Previene que todas las vistas (y sus controllers) se inicialicen en el
+/// startup — cada tab se inicializa únicamente cuando el usuario lo visita.
+class _LazyIndexedStack extends StatefulWidget {
+  final int index;
+  final List<Widget> children;
+
+  const _LazyIndexedStack({required this.index, required this.children});
+
+  @override
+  State<_LazyIndexedStack> createState() => _LazyIndexedStackState();
+}
+
+class _LazyIndexedStackState extends State<_LazyIndexedStack> {
+  late final Set<int> _built;
+
+  @override
+  void initState() {
+    super.initState();
+    _built = {widget.index};
+  }
+
+  @override
+  void didUpdateWidget(_LazyIndexedStack old) {
+    super.didUpdateWidget(old);
+    if (!_built.contains(widget.index)) {
+      setState(() => _built.add(widget.index));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IndexedStack(
+      index: widget.index,
+      children: List.generate(widget.children.length, (i) {
+        if (_built.contains(i)) return widget.children[i];
+        return const SizedBox.shrink();
+      }),
     );
   }
 }

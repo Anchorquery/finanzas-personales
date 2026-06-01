@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:get/get.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:app_finanzas_mobile/core/utils/currency_utils.dart';
@@ -37,16 +38,22 @@ class DashboardController extends GetxController {
   final previousIncome = 0.0.obs;
   final previousExpense = 0.0.obs;
 
+  bool _loadInProgress = false;
+
   @override
   void onInit() {
     super.onInit();
-    loadDashboard();
+    if (_workspacesController.activeWorkspace != null) {
+      loadDashboard();
+    }
     _checkNotifications();
 
-    // Reload when workspace changes
-    ever(_workspacesController.activeWorkspaceRx, (_) => loadDashboard());
-    // Reload when any module creates/edits/deletes data
-    ever(_directusService.dataVersion, (_) => loadDashboard());
+    ever(_workspacesController.activeWorkspaceRx, (ws) {
+      if (ws != null) loadDashboard();
+    });
+    ever(_directusService.dataVersion, (_) {
+      if (_workspacesController.activeWorkspace != null) loadDashboard();
+    });
   }
 
   void _checkNotifications() async {
@@ -71,32 +78,23 @@ class DashboardController extends GetxController {
   }
 
   Future<void> loadDashboard() async {
+    final workspaceId = _workspacesController.activeWorkspace?.id;
+    if (workspaceId == null) {
+      status.value = RxStatus.empty();
+      return;
+    }
+    if (_loadInProgress) return;
+    _loadInProgress = true;
+
     try {
-      try {
-        final user = await _directusService.getCurrentUser().timeout(
-          const Duration(seconds: 30),
-          onTimeout: () => null,
-        );
-        if (user != null) {
-          userName.value = user.firstName;
-          Get.log('DashboardController: User fetched - ${user.firstName}');
-        } else {
-          Get.log('DashboardController: User fetch returned null');
-        }
-      } catch (e) {
-        Get.log('DashboardController: Error fetching user: $e');
-      }
-
-      final workspaceId = _workspacesController.activeWorkspace?.id;
-      if (workspaceId == null) {
-        status.value = RxStatus.empty();
-        return;
-      }
-
       isLoading.value = true;
       status.value = RxStatus.loading();
-      Get.log(
-        'DashboardController: Starting loadDashboard for workspace $workspaceId',
+
+      // Fetch user name in parallel (non-blocking if fails)
+      unawaited(
+        _directusService.getCurrentUser().then((user) {
+          if (user != null) userName.value = user.firstName;
+        }).catchError((_) {}),
       );
 
       // Update currency from active workspace
@@ -225,6 +223,7 @@ class DashboardController extends GetxController {
       }
     } finally {
       isLoading.value = false;
+      _loadInProgress = false;
       Get.log('DashboardController: loadDashboard finished, isLoading=false');
     }
   }

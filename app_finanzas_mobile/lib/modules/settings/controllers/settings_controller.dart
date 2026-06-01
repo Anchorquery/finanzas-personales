@@ -197,11 +197,19 @@ class SettingsController extends GetxController {
         });
         apiKey.value = key;
         aiEnabled.value = enabled;
-        // Invalidate cached API key so AICoachController re-fetches on next init
+        // Sincronizar caché local: escribir si hay key, borrar si se desactivó.
         if (Get.isRegistered<AICoachController>()) {
-          Get.find<AICoachController>().invalidateApiKeyCache();
+          if (key.isNotEmpty) {
+            Get.find<AICoachController>().cacheApiKey(key);
+          } else {
+            Get.find<AICoachController>().invalidateApiKeyCache();
+          }
         } else {
-          GetStorage().remove('ai_gemini_key_cached');
+          if (key.isNotEmpty) {
+            GetStorage().write('ai_gemini_key_cached', key);
+          } else {
+            GetStorage().remove('ai_gemini_key_cached');
+          }
         }
         SnackbarService.showSuccess('Guardado', 'Configuración AI actualizada');
       } else {

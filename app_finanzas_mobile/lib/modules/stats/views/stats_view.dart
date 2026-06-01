@@ -29,22 +29,33 @@ class StatsController extends GetxController {
 
   double get netFlow => totalIncomeThisMonth.value - totalExpenseThisMonth.value;
 
+  bool _loadInProgress = false;
+
   @override
   void onInit() {
     super.onInit();
-    loadStats();
-    ever(_workspacesController.activeWorkspaceRx, (_) => loadStats());
-    ever(_directusService.dataVersion, (_) => loadStats());
+    if (_workspacesController.activeWorkspace != null) {
+      loadStats();
+    }
+    ever(_workspacesController.activeWorkspaceRx, (ws) {
+      if (ws != null) loadStats();
+    });
+    ever(_directusService.dataVersion, (_) {
+      if (_workspacesController.activeWorkspace != null) loadStats();
+    });
   }
 
   void changePeriod(String p) {
     period.value = p;
+    _loadInProgress = false; // acción explícita del usuario — forzar reload
     loadStats();
   }
 
   Future<void> loadStats() async {
     final wsId = _workspacesController.activeWorkspace?.id;
     if (wsId == null) return;
+    if (_loadInProgress) return;
+    _loadInProgress = true;
 
     isLoading.value = true;
     try {
@@ -139,6 +150,7 @@ class StatsController extends GetxController {
       Get.log('StatsController: Error loading stats: $e');
     } finally {
       isLoading.value = false;
+      _loadInProgress = false;
     }
   }
 }

@@ -265,6 +265,13 @@ class AICoachController extends GetxController {
     _storage.remove(_localApiKeyStorageKey);
   }
 
+  /// Actualiza la key en caché local sin tocar Directus.
+  void cacheApiKey(String key) {
+    if (key.isNotEmpty) {
+      _storage.write(_localApiKeyStorageKey, key);
+    }
+  }
+
   /// Onboarding embebido: guarda la API key (cache local + settings de la
   /// organización), inicializa el modelo y deja el coach listo.
   Future<bool> configureApiKey(String rawKey, {String? model}) async {
@@ -318,13 +325,14 @@ class AICoachController extends GetxController {
     } catch (e, st) {
       Get.log('AICoachController: configureApiKey error: $e');
       _captureSentry(e, st, tag: 'configure_api_key');
-      // Solo si ni el modelo se pudo crear descartamos la key.
+      // Si el modelo se creó, el coach queda configurado pese al error.
       if (_chatModel != null) {
         isConfigured.value = true;
         return true;
       }
       isConfigured.value = false;
-      invalidateApiKeyCache();
+      // No borrar la key: puede ser un error de red transitorio. El usuario
+      // puede reintentar sin tener que reescribirla.
       _cachedApiKey = null;
       return false;
     } finally {
@@ -878,7 +886,6 @@ REGLAS
     if (msg.toolCalls.isEmpty) return msg;
     return lc.AIChatMessage(
       content: msg.content,
-      appendToolCalls: msg.appendToolCalls,
       toolCalls: msg.toolCalls
           .map(
             (tc) => lc.AIChatMessageToolCall(

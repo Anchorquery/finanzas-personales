@@ -228,3 +228,5 @@ backend/data/
 # ─── Misc ────────────────────────────────────────────────────────
 *.log
 !CHANGELOG.md
+/app_finanzas_mobile/doc/diseño
+/app_finanzas_mobile/doc/diseno
